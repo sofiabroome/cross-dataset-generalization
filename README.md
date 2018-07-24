@@ -17,17 +17,6 @@ Performance of pre-trained model on **validation set**:
 - [Conda](https://conda.io/docs/user-guide/install/index.html#) - manages Python environment and dependencies
 - Run `conda update conda` to ensure the package is up-to-date
 
-
-- Python 3.x
-- PyTorch: 0.4.0 (conda installation preferred - ref https://pytorch.org/)
-- torchvision
-- matplotlib
-- skvideo (scikit-video)
-- ffmpeg
-- opencv-python
-- sh
-- PyAV (`conda install av -c conda-forge`)
-
 ## Setting up
 
 #### Installation
