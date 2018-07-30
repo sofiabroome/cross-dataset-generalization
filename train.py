@@ -180,7 +180,7 @@ def main():
                                 weight_decay=weight_decay)
 
     if args.eval_only:
-        validate(val_loader, model, criterion, train_data.classes_dict)
+        validate(test_loader, model, criterion, train_data.classes_dict)
         print(" > Evaluation DONE !")
         return
 
