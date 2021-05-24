@@ -32,8 +32,6 @@ best_loss = float('Inf')
 
 if config["input_mode"] == "av":
     from data_loader_av import VideoFolder
-elif config["input_mode"] == "skvideo":
-    from data_loader_skvideo import VideoFolder
 else:
     raise ValueError("Please provide a valid input mode")
 

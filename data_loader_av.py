@@ -2,14 +2,14 @@ import av
 import torch
 import numpy as np
 
-from data_parser import WebmDataset
+from data_parser import WebmDataset, Mp4Dataset
 from data_augmentor import Augmentor
 import torchvision
 from transforms_video import *
 from utils import save_images_for_debug
 
 
-FRAMERATE = 12  # default value
+FRAMERATE = 1  # default value
 
 
 class VideoFolder(torch.utils.data.Dataset):
@@ -18,8 +18,12 @@ class VideoFolder(torch.utils.data.Dataset):
                  nclips, step_size, is_val, transform_pre=None, transform_post=None,
                  augmentation_mappings_json=None, augmentation_types_todo=None,
                  get_item_id=False, is_test=False):
-        self.dataset_object = WebmDataset(json_file_input, json_file_labels,
-                                          root, is_test=is_test)
+        if 'something' in root:
+            self.dataset_object = WebmDataset(json_file_input, json_file_labels,
+                                              root, is_test=is_test)
+        else:
+            self.dataset_object = Mp4Dataset(json_file_input, json_file_labels,
+                                             root, is_test=is_test)
         self.json_data = self.dataset_object.json_data
         self.classes = self.dataset_object.classes
         self.classes_dict = self.dataset_object.classes_dict
@@ -58,7 +62,11 @@ class VideoFolder(torch.utils.data.Dataset):
         imgs = self.transform_post(imgs)
 
         num_frames = len(imgs)
-        target_idx = self.classes_dict[label]
+
+        if 'something' in self.root:
+            target_idx = self.classes_dict[label]
+        else:
+            target_idx = label
 
         if self.nclips > -1:
             num_frames_necessary = self.clip_size * self.nclips * self.step_size
