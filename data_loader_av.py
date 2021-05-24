@@ -48,7 +48,7 @@ class VideoFolder(torch.utils.data.Dataset):
 
         try:
             imgs = []
-            imgs = [f.to_rgb().to_nd_array() for f in reader.decode(video=0)]
+            imgs = [f.to_rgb().to_ndarray() for f in reader.decode(video=0)]
         except (RuntimeError, ZeroDivisionError) as exception:
             print('{}: WEBM reader cannot open {}. Empty '
                   'list returned.'.format(type(exception).__name__, item.path))
@@ -105,9 +105,11 @@ if __name__ == '__main__':
                         [torchvision.transforms.ToTensor(), "img"],
                          ])
 
-    loader = VideoFolder(root="/data-ssd1/20bn-something-something-v2/videos",
-                         json_file_input="/data-ssd1/20bn-something-something-v2/annotations/something-something-v2-train.json",
-                         json_file_labels="/data-ssd1/20bn-something-something-v2/annotations/something-something-v2-labels.json",
+    smth_root = '/local_storage/users/sbroome/something-something/20bn-something-something-v2/'
+
+    loader = VideoFolder(root=smth_root,
+                         json_file_input=smth_root + "annotations/something-something-v2-train.json",
+                         json_file_labels=smth_root + "annotations/something-something-v2-labels.json",
                          clip_size=36,
                          nclips=1,
                          step_size=1,
@@ -128,7 +130,7 @@ if __name__ == '__main__':
     batch_loader = torch.utils.data.DataLoader(
         loader,
         batch_size=10, shuffle=False,
-        num_workers=8, pin_memory=True)
+        num_workers=2, pin_memory=True)
 
     start = time.time()
     for i, a in enumerate(tqdm(batch_loader)):
