@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import wandb
 import signal
 import importlib
 
@@ -8,7 +9,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from utils import *
+import utils
 from callbacks import (PlotLearning, AverageMeter)
 from models.multi_column import MultiColumn
 import torchvision
@@ -17,15 +18,15 @@ from torchsummary import summary as ts_summary
 
 
 # load configurations
-args = load_args()
-config = load_json_config(args.config)
+args = utils.load_args()
+config = utils.load_json_config(args.config)
 
 # set column model
 file_name = config['conv_model']
 cnn_def = importlib.import_module("{}".format(file_name))
 
 # setup device - CPU or GPU
-device, device_ids = setup_cuda_devices(args)
+device, device_ids = utils.setup_cuda_devices(args)
 print(" > Using device: {}".format(device.type))
 print(" > Active GPU ids: {}".format(device_ids))
 
@@ -41,23 +42,23 @@ def main():
     global args, best_loss
 
     # set run output folder
-    model_name = config["model_name"]
+    config['model_id'] = '_'.join([config["model_name"], args.job_identifier])
+    wandb.init(project="cross-dataset-generalization", config=config)
     output_dir = config["output_dir"]
-    save_dir = os.path.join(output_dir, model_name)
+    save_dir = os.path.join(output_dir, config['model_id'])
     print(" > Output folder for this run -- {}".format(save_dir))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
         os.makedirs(os.path.join(save_dir, 'plots'))
 
     # assign Ctrl+C signal handler
-    signal.signal(signal.SIGINT, ExperimentalRunCleaner(save_dir))
+    signal.signal(signal.SIGINT, utils.ExperimentalRunCleaner(save_dir))
 
     # create model
     print(" > Creating model ... !")
     model = MultiColumn(config['num_classes'], cnn_def.Model,
                         int(config["column_units"]))
     
-
     # multi GPU setting
     model = torch.nn.DataParallel(model, device_ids).to(device)
 
@@ -67,21 +68,18 @@ def main():
         config['input_spatial_size'], config['input_spatial_size']))
 
     # optionally resume from a checkpoint
-    checkpoint_path = os.path.join(config['output_dir'],
-                                   config['model_name'],
-                                   'model_best.pth.tar')
     if args.resume:
-        if os.path.isfile(checkpoint_path):
+        if os.path.isfile(config['checkpoint_path']):
             print(" > Loading checkpoint '{}'".format(args.resume))
-            checkpoint = torch.load(checkpoint_path)
+            checkpoint = torch.load(config['checkpoint_path'])
             args.start_epoch = checkpoint['epoch']
             best_loss = checkpoint['best_loss']
             model.load_state_dict(checkpoint['state_dict'])
             print(" > Loaded checkpoint '{}' (epoch {})"
-                  .format(checkpoint_path, checkpoint['epoch']))
+                  .format(config['checkpoint_path'], checkpoint['epoch']))
         else:
             print(" !#! No checkpoint found at '{}'".format(
-                checkpoint_path))
+                config['checkpoint_path']))
 
     # define augmentation pipeline
     upscale_size_train = int(config['input_spatial_size'] * config["upscale_factor_train"])
@@ -109,19 +107,22 @@ def main():
                        std=[0.229, 0.224, 0.225]), "img"]
              ])
 
-    train_data = VideoFolder(root=config['data_folder'],
-                             json_file_input=config['json_data_train'],
-                             json_file_labels=config['json_file_labels'],
-                             clip_size=config['clip_size'],
-                             nclips=config['nclips_train'],
-                             step_size=config['step_size_train'],
-                             is_val=False,
-                             transform_pre=transform_train_pre,
-                             transform_post=transform_post,
-                             augmentation_mappings_json=config['augmentation_mappings_json'],
-                             augmentation_types_todo=config['augmentation_types_todo'],
-                             get_item_id=False,
-                             )
+    train_val_data = VideoFolder(root=config['data_folder'],
+                                 json_file_input=config['json_data_train'],
+                                 json_file_labels=config['json_file_labels'],
+                                 clip_size=config['clip_size'],
+                                 nclips=config['nclips_train_val'],
+                                 step_size=config['step_size_train_val'],
+                                 is_val=False,
+                                 transform_pre=transform_train_pre,
+                                 transform_post=transform_post,
+                                 augmentation_mappings_json=config['augmentation_mappings_json'],
+                                 augmentation_types_todo=config['augmentation_types_todo'],
+                                 get_item_id=True,
+                                 )
+    train_data, val_data = torch.utils.data.random_split(
+        train_val_data, [config['nb_train_samples'], config['nb_val_samples']],
+        generator=torch.Generator().manual_seed(42))
 
     print(" > Using {} processes for data loader.".format(
         config["num_workers"]))
@@ -131,18 +132,6 @@ def main():
         batch_size=config['batch_size'], shuffle=True,
         num_workers=config['num_workers'], pin_memory=True,
         drop_last=True)
-
-    val_data = VideoFolder(root=config['data_folder'],
-                           json_file_input=config['json_data_val'],
-                           json_file_labels=config['json_file_labels'],
-                           clip_size=config['clip_size'],
-                           nclips=config['nclips_val'],
-                           step_size=config['step_size_val'],
-                           is_val=True,
-                           transform_pre=transform_eval_pre,
-                           transform_post=transform_post,
-                           get_item_id=True,
-                           )
 
     val_loader = torch.utils.data.DataLoader(
         val_data,
@@ -154,8 +143,8 @@ def main():
                             json_file_input=config['json_data_test'],
                             json_file_labels=config['json_file_labels'],
                             clip_size=config['clip_size'],
-                            nclips=config['nclips_val'],
-                            step_size=config['step_size_val'],
+                            nclips=config['nclips_test'],
+                            step_size=config['step_size_test'],
                             is_val=True,
                             transform_pre=transform_eval_pre,
                             transform_post=transform_post,
@@ -169,8 +158,8 @@ def main():
         num_workers=config['num_workers'], pin_memory=True,
         drop_last=False)
 
-    print(" > Number of dataset classes : {}".format(len(train_data.classes)))
-    assert len(train_data.classes) == config["num_classes"]
+    # print(" > Number of dataset classes : {}".format(len(train_data.classes)))
+    # assert len(train_data.classes) == config["num_classes"]
 
     # define loss function (criterion)
     criterion = nn.CrossEntropyLoss().to(device)
@@ -218,7 +207,7 @@ def main():
             train_loader, model, criterion, optimizer, epoch)
 
         # evaluate on validation set
-        val_loss, val_top1, val_top5 = validate(val_loader, model, criterion)
+        val_loss, val_top1, val_top5 = validate(val_loader, model, criterion, which_split='val')
 
         # set learning rate
         lr_decayer.step(val_loss, epoch)
@@ -237,12 +226,14 @@ def main():
         # remember best loss and save the checkpoint
         is_best = val_loss < best_loss
         best_loss = min(val_loss, best_loss)
-        save_checkpoint({
+        utils.save_checkpoint({
             'epoch': epoch + 1,
             'arch': "Conv4Col",
             'state_dict': model.state_dict(),
             'best_loss': best_loss,
         }, is_best, config)
+
+    test_loss, test_top1, test_top5 = validate(test_loader, model, criterion, which_split='test')
 
 
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -256,12 +247,12 @@ def train(train_loader, model, criterion, optimizer, epoch):
     model.train()
 
     end = time.time()
-    for i, (input, target) in enumerate(train_loader):
+    for i, (input, target, item_id) in enumerate(train_loader):
 
         # measure data loading time
         data_time.update(time.time() - end)
 
-        if config['nclips_train'] > 1:
+        if config['nclips_train_val'] > 1:
             input_var = list(input.split(config['clip_size'], 2))
             for idx, inp in enumerate(input_var):
                 input_var[idx] = inp.to(device)
@@ -277,10 +268,14 @@ def train(train_loader, model, criterion, optimizer, epoch):
         loss = criterion(output, target)
 
         # measure accuracy and record loss
-        prec1, prec5 = accuracy(output.detach().cpu(), target.detach().cpu(), topk=(1, 5))
+        prec1, prec5 = utils.accuracy(output.detach().cpu(), target.detach().cpu(), topk=(1, 5))
         losses.update(loss.item(), input.size(0))
         top1.update(prec1.item(), input.size(0))
         top5.update(prec5.item(), input.size(0))
+
+        wandb.log({'train_loss': loss.item()})
+        wandb.log({'train_prec1': prec1.item()})
+        wandb.log({'train_prec5': prec5.item()})
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -300,12 +295,12 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                       epoch, i, len(train_loader), batch_time=batch_time,
                       data_time=data_time, loss=losses, top1=top1, top5=top5))
-        if i > 10:
+        if i > 1:
             break
     return losses.avg, top1.avg, top5.avg
 
 
-def validate(val_loader, model, criterion, class_to_idx=None):
+def validate(val_loader, model, criterion, class_to_idx=None, which_split='val'):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -318,12 +313,14 @@ def validate(val_loader, model, criterion, class_to_idx=None):
     features_matrix = []
     targets_list = []
     item_id_list = []
+    all_targets_list = []
 
     end = time.time()
     with torch.no_grad():
         for i, (input, target, item_id) in enumerate(val_loader):
+            all_targets_list.append(target)
 
-            if config['nclips_val'] > 1:
+            if config['nclips_test'] > 1:
                 input_var = list(input.split(config['clip_size'], 2))
                 for idx, inp in enumerate(input_var):
                     input_var[idx] = inp.to(device)
@@ -343,10 +340,13 @@ def validate(val_loader, model, criterion, class_to_idx=None):
                 item_id_list.append(item_id)
 
             # measure accuracy and record loss
-            prec1, prec5 = accuracy(output.detach().cpu(), target.detach().cpu(), topk=(1, 5))
+            prec1, prec5 = utils.accuracy(output.detach().cpu(), target.detach().cpu(), topk=(1, 5))
             losses.update(loss.item(), input.size(0))
             top1.update(prec1.item(), input.size(0))
             top5.update(prec5.item(), input.size(0))
+            wandb.log({f'{which_split}_loss': loss.item()})
+            wandb.log({f'{which_split}_prec1': prec1.item()})
+            wandb.log({f'{which_split}_prec5': prec5.item()})
 
             # measure elapsed time
             batch_time.update(time.time() - end)
@@ -360,11 +360,12 @@ def validate(val_loader, model, criterion, class_to_idx=None):
                       'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                           i, len(val_loader), batch_time=batch_time, loss=losses,
                           top1=top1, top5=top5))
-            if i > 10:
+            if i > 1:
                 break
 
     print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
           .format(top1=top1, top5=top5))
+    utils.plot_class_histogram(config['output_dir'], all_targets_list, which_split=which_split)
 
     if args.eval_only:
         logits_matrix = np.concatenate(logits_matrix)
@@ -372,9 +373,9 @@ def validate(val_loader, model, criterion, class_to_idx=None):
         targets_list = np.concatenate(targets_list)
         item_id_list = np.concatenate(item_id_list)
         print(logits_matrix.shape, targets_list.shape, item_id_list.shape)
-        save_results(logits_matrix, features_matrix, targets_list,
+        utils.save_results(logits_matrix, features_matrix, targets_list,
                      item_id_list, class_to_idx, config)
-        get_submission(logits_matrix, item_id_list, class_to_idx, config)
+        utils.get_submission(logits_matrix, item_id_list, class_to_idx, config)
     return losses.avg, top1.avg, top5.avg
 
 
