@@ -13,6 +13,7 @@ from callbacks import (PlotLearning, AverageMeter)
 from models.multi_column import MultiColumn
 import torchvision
 from transforms_video import *
+from torchsummary import summary as ts_summary
 
 
 # load configurations
@@ -55,9 +56,15 @@ def main():
     print(" > Creating model ... !")
     model = MultiColumn(config['num_classes'], cnn_def.Model,
                         int(config["column_units"]))
+    
 
     # multi GPU setting
     model = torch.nn.DataParallel(model, device_ids).to(device)
+
+    # Print model summary
+    ts_summary(model, input_size=(
+        config['batch_size'], 3, config['clip_size'],
+        config['input_spatial_size'], config['input_spatial_size']))
 
     # optionally resume from a checkpoint
     checkpoint_path = os.path.join(config['output_dir'],
@@ -293,6 +300,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                       epoch, i, len(train_loader), batch_time=batch_time,
                       data_time=data_time, loss=losses, top1=top1, top5=top5))
+        if i > 10:
+            break
     return losses.avg, top1.avg, top5.avg
 
 
@@ -351,6 +360,8 @@ def validate(val_loader, model, criterion, class_to_idx=None):
                       'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                           i, len(val_loader), batch_time=batch_time, loss=losses,
                           top1=top1, top5=top5))
+            if i > 10:
+                break
 
     print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
           .format(top1=top1, top5=top5))
