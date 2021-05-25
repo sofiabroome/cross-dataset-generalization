@@ -105,3 +105,9 @@ venv.bak/
 
 # Jetbrains
 .idea/
+
+# Mac folders
+.DS_Store
+
+# Models
+trained_models/
