@@ -50,9 +50,13 @@ class DatasetBase(object):
             with open(self.json_path_input, 'rb') as jsonfile:
                 json_reader = json.load(jsonfile)
                 for elem in json_reader:
-                    # add a dummy label for all test samples
+                    # add a dummy label for all test samples in smth-smth
+                    if 'something' in self.data_root:
+                        label = 'Holding something'
+                    else:
+                        label = elem['label']
                     item = ListData(elem[video_id_key],
-                                    "Holding something",
+                                    label,
                                     os.path.join(self.data_root,
                                                  elem[video_id_key] + self.extension)
                                     )

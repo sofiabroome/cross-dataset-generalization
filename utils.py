@@ -20,6 +20,8 @@ def load_args():
                          " enter a comma separated list")
     parser.add_argument('--use_cuda', action='store_true',
                         help="to use GPUs")
+    parser.add_argument('--job_identifier', '-j', help='Unique identifier for run,'
+                                                       'avoids overwriting model.')
     args = parser.parse_args()
     if len(sys.argv) < 2:
         parser.print_help()
@@ -66,8 +68,8 @@ def setup_cuda_devices(args):
 
 
 def save_checkpoint(state, is_best, config, filename='checkpoint.pth.tar'):
-    checkpoint_path = os.path.join(config['output_dir'], config['model_name'], filename)
-    model_path = os.path.join(config['output_dir'], config['model_name'], 'model_best.pth.tar')
+    checkpoint_path = os.path.join(config['output_dir'], config['model_id'], filename)
+    model_path = os.path.join(config['output_dir'], config['model_id'], 'model_best.pth.tar')
     torch.save(state, checkpoint_path)
     if is_best:
         print(" > Best model found at this epoch. Saving ...")
@@ -106,6 +108,19 @@ def save_images_for_debug(dir_img, imgs):
         for j, img in enumerate(batch):
             plt.imsave(os.path.join(batch_dir, "frame{%04d}.png" % (j + 1)),
                        img.astype("uint8"))
+
+
+def plot_class_histogram(dir_img, all_targets_list, which_split, nb_classes=48):
+    print("Saving histogram to {}".format(dir_img))
+    from matplotlib import pyplot as plt
+    print('Computing hist...')
+    plt.hist(torch.cat(all_targets_list), bins=nb_classes, range=(0, 47))
+
+    print('Finished computing hist. Saving...')
+    if not os.path.exists(dir_img):
+        os.makedirs(dir_img)
+
+    plt.savefig(os.path.join(dir_img, f"{which_split}_histogram.png"))
 
 
 def get_submission(logits_matrix, item_id_list, class_to_idx, config):
