@@ -179,8 +179,8 @@ def main():
         return
 
     # set callbacks
-    plotter = PlotLearning(os.path.join(
-        save_dir, "plots"), config["num_classes"])
+    # plotter = PlotLearning(os.path.join(
+    #     save_dir, "plots"), config["num_classes"])
     lr_decayer = torch.optim.lr_scheduler.ReduceLROnPlateau(
                         optimizer, 'min', factor=0.5, patience=2, verbose=True)
     val_loss = float('Inf')
@@ -201,6 +201,7 @@ def main():
         if np.max(lr) < last_lr and last_lr > 0:
             print(" > Training is DONE by learning rate {}".format(last_lr))
             sys.exit(1)
+        wandb.log({'epoch': epoch})
 
         # train for one epoch
         train_loss, train_top1, train_top5 = train(
@@ -212,14 +213,14 @@ def main():
         # set learning rate
         lr_decayer.step(val_loss, epoch)
 
-        # plot learning
-        plotter_dict = {}
-        plotter_dict['loss'] = train_loss
-        plotter_dict['val_loss'] = val_loss
-        plotter_dict['acc'] = train_top1 / 100
-        plotter_dict['val_acc'] = val_top1 / 100
-        plotter_dict['learning_rate'] = lr
-        plotter.plot(plotter_dict)
+        # # plot learning
+        # plotter_dict = {}
+        # plotter_dict['loss'] = train_loss
+        # plotter_dict['val_loss'] = val_loss
+        # plotter_dict['acc'] = train_top1 / 100
+        # plotter_dict['val_acc'] = val_top1 / 100
+        # plotter_dict['learning_rate'] = lr
+        # plotter.plot(plotter_dict)
 
         print(" > Validation loss after epoch {} = {}".format(epoch, val_loss))
 
@@ -295,8 +296,6 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                       epoch, i, len(train_loader), batch_time=batch_time,
                       data_time=data_time, loss=losses, top1=top1, top5=top5))
-        if i > 1:
-            break
     return losses.avg, top1.avg, top5.avg
 
 
@@ -313,12 +312,10 @@ def validate(val_loader, model, criterion, class_to_idx=None, which_split='val')
     features_matrix = []
     targets_list = []
     item_id_list = []
-    all_targets_list = []
 
     end = time.time()
     with torch.no_grad():
         for i, (input, target, item_id) in enumerate(val_loader):
-            all_targets_list.append(target)
 
             if config['nclips_test'] > 1:
                 input_var = list(input.split(config['clip_size'], 2))
@@ -360,12 +357,9 @@ def validate(val_loader, model, criterion, class_to_idx=None, which_split='val')
                       'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
                           i, len(val_loader), batch_time=batch_time, loss=losses,
                           top1=top1, top5=top5))
-            if i > 1:
-                break
 
     print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
           .format(top1=top1, top5=top5))
-    utils.plot_class_histogram(config['output_dir'], all_targets_list, which_split=which_split)
 
     if args.eval_only:
         logits_matrix = np.concatenate(logits_matrix)
