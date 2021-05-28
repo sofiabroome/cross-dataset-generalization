@@ -111,3 +111,10 @@ venv.bak/
 
 # Models
 trained_models/
+
+# Monitoring
+wandb/
+logs/
+
+# Run scripts
+run_scripts/
