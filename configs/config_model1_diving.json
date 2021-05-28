@@ -5,13 +5,13 @@
 
     "input_mode": "av",
 
-    "data_folder": "/Users/sbroome/Downloads/rgb/",
+    "data_folder": "/local_storage/users/sbroome/diving48/rgb/",
 
-    "json_data_train": "/Users/sbroome/Downloads/Diving48_V2_train.json",
-    "json_data_val": "/Users/sbroome/Downloads/Diving48_V2_test.json",
-    "json_data_test": "/Users/sbroome/Downloads/Diving48_V2_test.json",
+    "json_data_train": "/local_storage/users/sbroome/diving48/Diving48_V2_train.json",
+    "json_data_val": "/local_storage/users/sbroome/diving48/Diving48_V2_test.json",
+    "json_data_test": "/local_storage/users/sbroome/diving48/Diving48_V2_test.json",
 
-    "json_file_labels": "/Users/sbroome/Downloads/Diving48_vocab.json",
+    "json_file_labels": "/local_storage/users/sbroome/diving48/Diving48_vocab.json",
     "nb_train_samples": 13525,
     "nb_val_samples": 1502,
 
@@ -19,7 +19,7 @@
 
     "num_classes": 48,
     "batch_size": 5,
-    "clip_size": 60,
+    "clip_size": 6,
     
     "nclips_train_val": 1,
     "nclips_test": 1,
