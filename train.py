@@ -270,6 +270,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
         # measure accuracy and record loss
         prec1, prec5 = utils.accuracy(output.detach().cpu(), target.detach().cpu(), topk=(1, 5))
+        # for frame_ind in range(input_var[0].shape[2]):
+        #     wandb.log({f"input_var_{frame_ind}": wandb.Image(input_var[0][0, :, frame_ind, :])})
         losses.update(loss.item(), input.size(0))
         top1.update(prec1.item(), input.size(0))
         top5.update(prec5.item(), input.size(0))
@@ -277,6 +279,8 @@ def train(train_loader, model, criterion, optimizer, epoch):
         wandb.log({'train_loss': loss.item()})
         wandb.log({'train_prec1': prec1.item()})
         wandb.log({'train_prec5': prec5.item()})
+        wandb.log({'train_top1_avg': top1.avg})
+        wandb.log({'train_top5_avg': top5.avg})
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -344,6 +348,8 @@ def validate(val_loader, model, criterion, class_to_idx=None, which_split='val')
             wandb.log({f'{which_split}_loss': loss.item()})
             wandb.log({f'{which_split}_prec1': prec1.item()})
             wandb.log({f'{which_split}_prec5': prec5.item()})
+            wandb.log({f'{which_split}_top1_avg': top1.avg})
+            wandb.log({f'{which_split}_top5_avg': top5.avg})
 
             # measure elapsed time
             batch_time.update(time.time() - end)
