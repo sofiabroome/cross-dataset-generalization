@@ -17,7 +17,7 @@ class VideoFolder(torch.utils.data.Dataset):
     def __init__(self, root, json_file_input, json_file_labels, clip_size,
                  nclips, step_size, is_val, transform_pre=None, transform_post=None,
                  augmentation_mappings_json=None, augmentation_types_todo=None,
-                 get_item_id=False, is_test=False):
+                 get_item_id=False, is_test=False, seq_first=False):
         if 'something' in root:
             self.dataset_object = WebmDataset(json_file_input, json_file_labels,
                                               root, is_test=is_test)
@@ -39,6 +39,7 @@ class VideoFolder(torch.utils.data.Dataset):
         self.step_size = step_size
         self.is_val = is_val
         self.get_item_id = get_item_id
+        self.seq_first = seq_first
 
     def __getitem__(self, index):
         """
@@ -88,7 +89,8 @@ class VideoFolder(torch.utils.data.Dataset):
 
         # format data to torch
         data = torch.stack(imgs)
-        data = data.permute(1, 0, 2, 3)
+        if not self.seq_first:
+            data = data.permute(1, 0, 2, 3)
         if self.get_item_id:
             return (data, target_idx, item.id)
         else:
