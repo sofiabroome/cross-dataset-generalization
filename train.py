@@ -22,8 +22,8 @@ args = utils.load_args()
 config = utils.load_json_config(args.config)
 
 # set column model
-file_name = config['conv_model']
-cnn_def = importlib.import_module("{}".format(file_name))
+file_name = config['model_name']
+model_def = importlib.import_module(f"models.{file_name}")
 
 # setup device - CPU or GPU
 device, device_ids = utils.setup_cuda_devices(args)
@@ -56,16 +56,23 @@ def main():
 
     # create model
     print(" > Creating model ... !")
-    model = MultiColumn(config['num_classes'], cnn_def.Model,
-                        int(config["column_units"]))
-    
-    # multi GPU setting
-    model = torch.nn.DataParallel(model, device_ids).to(device)
+    if '3D' in config['model_name']:
+        model = MultiColumn(config['num_classes'], model_def.Model,
+                            int(config["column_units"]))
+
+        # multi GPU setting
+        model = torch.nn.DataParallel(model, device_ids).to(device)
+        input_size = (config['batch_size'], 3, config['clip_size'],
+                      config['input_spatial_size'], config['input_spatial_size'])
+        seq_first = False
+    else:
+        model = model_def.ConvLSTMModel(config=config)
+        input_size = (config['clip_size'], config['batch_size'], 3,
+                      config['input_spatial_size'], config['input_spatial_size'])
+        seq_first = True
 
     # Print model summary
-    ts_summary(model, input_size=(
-        config['batch_size'], 3, config['clip_size'],
-        config['input_spatial_size'], config['input_spatial_size']))
+    # ts_summary(model, input_size=input_size)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -119,6 +126,7 @@ def main():
                                  augmentation_mappings_json=config['augmentation_mappings_json'],
                                  augmentation_types_todo=config['augmentation_types_todo'],
                                  get_item_id=True,
+                                 seq_first=seq_first
                                  )
     train_data, val_data = torch.utils.data.random_split(
         train_val_data, [config['nb_train_samples'], config['nb_val_samples']],

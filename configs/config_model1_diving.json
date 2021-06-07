@@ -37,7 +37,6 @@
     "num_epochs": -1,
     "print_freq": 100,
 
-    "conv_model": "models.model3D_1_224",
     "input_spatial_size": 84,
 
     "column_units": 512,
