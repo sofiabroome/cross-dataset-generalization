@@ -1,6 +1,6 @@
 {
     "model_name": "model3D_1_224",
-    "output_dir": "trained_models/",
+    "output_dir": "/local_storage/users/sbroome/xdataset_output/",
     "checkpoint_path": "-1",
 
     "input_mode": "av",
@@ -15,11 +15,11 @@
     "nb_train_samples": 13525,
     "nb_val_samples": 1502,
 
-    "num_workers": 0,
+    "num_workers": 4,
 
     "num_classes": 48,
-    "batch_size": 5,
-    "clip_size": 6,
+    "batch_size": 32,
+    "clip_size": 16,
     
     "nclips_train_val": 1,
     "nclips_test": 1,
@@ -27,15 +27,15 @@
     "upscale_factor_train": 1.07,
     "upscale_factor_eval": 1.0,
 
-    "step_size_train_val": 1,
-    "step_size_test": 1,
+    "step_size_train_val": 10,
+    "step_size_test": 10,
 
-    "lr": 0.01,
+    "lr": 0.001,
     "last_lr": 0.00001,
     "momentum": 0.9,
     "weight_decay": 0.00001,
-    "num_epochs": 1,
-    "print_freq": 1,
+    "num_epochs": -1,
+    "print_freq": 100,
 
     "conv_model": "models.model3D_1_224",
     "input_spatial_size": 84,

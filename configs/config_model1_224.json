@@ -4,15 +4,15 @@
 
     "input_mode": "av",
 
-    "data_folder": "/data-ssd1/20bn-something-something-v2/videos/",
+    "data_folder": "/local_storage/users/sbroome/something-something/20bn-something-something-v2/",
 
-    "json_data_train": "/data-ssd1/20bn-something-something-v2/annotations/something-something-v2-train.json",
-    "json_data_val": "/data-ssd1/20bn-something-something-v2/annotations/something-something-v2-validation.json",
-    "json_data_test": "/data-ssd1/20bn-something-something-v2/annotations/something-something-v2-test.json",
+    "json_data_train": "/local_storage/users/sbroome/something-something/20bn-something-something-v2/annotations/something-something-v2-train.json",
+    "json_data_val": "/local_storage/users/sbroome/something-something/20bn-something-something-v2/annotations/something-something-v2-validation.json",
+    "json_data_test": "/local_storage/users/sbroome/something-something/20bn-something-something-v2/annotations/something-something-v2-test.json",
 
-    "json_file_labels": "/data-ssd1/20bn-something-something-v2/annotations/something-something-v2-labels.json",
+    "json_file_labels": "/local_storage/users/sbroome/something-something/20bn-something-something-v2/annotations/something-something-v2-labels.json",
 
-    "num_workers": 8,
+    "num_workers": 2,
 
     "num_classes": 174,
     "batch_size": 5,
@@ -32,7 +32,7 @@
     "momentum": 0.9,
     "weight_decay": 0.00001,
     "num_epochs": -1,
-    "print_freq": 500,
+    "print_freq": 5,
 
     "conv_model": "models.model3D_1_224",
     "input_spatial_size": 224,
