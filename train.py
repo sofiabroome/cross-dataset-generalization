@@ -15,6 +15,7 @@ from models.multi_column import MultiColumn
 import torchvision
 from transforms_video import *
 from torchsummary import summary as ts_summary
+from sklearn.metrics import classification_report, confusion_matrix
 
 
 # load configurations
@@ -31,6 +32,7 @@ print(" > Using device: {}".format(device.type))
 print(" > Active GPU ids: {}".format(device_ids))
 
 best_loss = float('Inf')
+best_acc = -float('Inf')
 
 if config["input_mode"] == "av":
     from data_loader_av import VideoFolder
@@ -39,13 +41,14 @@ else:
 
 
 def main():
-    global args, best_loss
+    global args, best_loss, best_acc
 
     # set run output folder
     config['model_id'] = '_'.join([config["model_name"], args.job_identifier])
     wandb.init(project="cross-dataset-generalization", config=config)
     output_dir = config["output_dir"]
     save_dir = os.path.join(output_dir, config['model_id'])
+    config['save_dir'] = save_dir
     print(" > Output folder for this run -- {}".format(save_dir))
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -66,7 +69,7 @@ def main():
                       config['input_spatial_size'], config['input_spatial_size'])
         seq_first = False
     else:
-        model = model_def.ConvLSTMModel(config=config)
+        model = model_def.ConvLSTMModel(config=config, device=device).to(device)
         input_size = (config['clip_size'], config['batch_size'], 3,
                       config['input_spatial_size'], config['input_spatial_size'])
         seq_first = True
@@ -81,6 +84,7 @@ def main():
             checkpoint = torch.load(config['checkpoint_path'])
             args.start_epoch = checkpoint['epoch']
             best_loss = checkpoint['best_loss']
+            best_acc = checkpoint['best_acc']
             model.load_state_dict(checkpoint['state_dict'])
             print(" > Loaded checkpoint '{}' (epoch {})"
                   .format(config['checkpoint_path'], checkpoint['epoch']))
@@ -182,7 +186,8 @@ def main():
                                 weight_decay=weight_decay)
 
     if args.eval_only:
-        validate(test_loader, model, criterion, train_data.classes_dict)
+        validate(test_loader, model, criterion,
+            args=args, config=config, class_to_idx=train_data.classes_dict)
         print(" > Evaluation DONE !")
         return
 
@@ -213,10 +218,10 @@ def main():
 
         # train for one epoch
         train_loss, train_top1, train_top5 = train(
-            train_loader, model, criterion, optimizer, epoch)
+            train_loader, model, criterion, optimizer, epoch, args)
 
         # evaluate on validation set
-        val_loss, val_top1, val_top5 = validate(val_loader, model, criterion, which_split='val')
+        val_loss, val_top1, val_top5 = validate(val_loader, model, criterion, args, config, which_split='val')
 
         # set learning rate
         lr_decayer.step(val_loss, epoch)
@@ -231,21 +236,25 @@ def main():
         # plotter.plot(plotter_dict)
 
         print(" > Validation loss after epoch {} = {}".format(epoch, val_loss))
+        print(" > Validation acc. after epoch {} = {}".format(epoch, val_top1))
 
         # remember best loss and save the checkpoint
-        is_best = val_loss < best_loss
+        # is_best = val_loss < best_loss
+        is_best = val_top1 > best_acc
         best_loss = min(val_loss, best_loss)
+        best_acc = max(val_top1, best_acc)
         utils.save_checkpoint({
             'epoch': epoch + 1,
             'arch': "Conv4Col",
             'state_dict': model.state_dict(),
             'best_loss': best_loss,
+            'best_acc': best_acc,
         }, is_best, config)
 
-    test_loss, test_top1, test_top5 = validate(test_loader, model, criterion, which_split='test')
+    test_loss, test_top1, test_top5 = validate(test_loader, model, criterion, args, config, which_split='test')
 
 
-def train(train_loader, model, criterion, optimizer, epoch):
+def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter()
     data_time = AverageMeter()
     losses = AverageMeter()
@@ -257,6 +266,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
 
     end = time.time()
     for i, (input, target, item_id) in enumerate(train_loader):
+
+        if args.test_run:
+            if i > 3:
+                break
 
         # measure data loading time
         data_time.update(time.time() - end)
@@ -311,7 +324,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
     return losses.avg, top1.avg, top5.avg
 
 
-def validate(val_loader, model, criterion, class_to_idx=None, which_split='val'):
+def validate(val_loader, model, criterion, args, config, class_to_idx=None, which_split='val'):
     batch_time = AverageMeter()
     losses = AverageMeter()
     top1 = AverageMeter()
@@ -328,6 +341,9 @@ def validate(val_loader, model, criterion, class_to_idx=None, which_split='val')
     end = time.time()
     with torch.no_grad():
         for i, (input, target, item_id) in enumerate(val_loader):
+            if args.test_run:
+                if i > 3:
+                    break
 
             if config['nclips_test'] > 1:
                 input_var = list(input.split(config['clip_size'], 2))
@@ -342,7 +358,7 @@ def validate(val_loader, model, criterion, class_to_idx=None, which_split='val')
             output, features = model(input_var, config['save_features'])
             loss = criterion(output, target)
 
-            if args.eval_only:
+            if which_split == 'test':
                 logits_matrix.append(output.cpu().data.numpy())
                 features_matrix.append(features.cpu().data.numpy())
                 targets_list.append(target.cpu().numpy())
@@ -374,6 +390,14 @@ def validate(val_loader, model, criterion, class_to_idx=None, which_split='val')
 
     print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
           .format(top1=top1, top5=top5))
+    if which_split == 'test':
+        flat_targets = np.concatenate(targets_list)
+        flat_preds = np.argmax(np.concatenate(logits_matrix), axis=1)
+        labels = [*range(config['num_classes'])]
+        cr = classification_report(flat_targets, flat_preds, digits=4, labels=labels)
+        utils.save_evaluation_as_text(cr, 'classification_report', config)
+        cm = confusion_matrix(flat_targets, flat_preds, labels=labels)
+        utils.save_evaluation_as_text(cm, 'confusion_matrix', config)
 
     if args.eval_only:
         logits_matrix = np.concatenate(logits_matrix)

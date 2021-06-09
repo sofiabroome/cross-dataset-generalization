@@ -20,6 +20,8 @@ def load_args():
                          " enter a comma separated list")
     parser.add_argument('--use_cuda', action='store_true',
                         help="to use GPUs")
+    parser.add_argument('--test_run', action='store_true',
+                        help="quick test run")
     parser.add_argument('--job_identifier', '-j', help='Unique identifier for run,'
                                                        'avoids overwriting model.')
     args = parser.parse_args()
@@ -27,6 +29,13 @@ def load_args():
         parser.print_help()
         sys.exit(1)
     return args
+
+
+def save_evaluation_as_text(evaluation, str_name, config):
+    f = open(config['save_dir'] + f'{str_name}.txt', 'w')
+    print(evaluation, end="", file=f)
+    f.close()
+    print(evaluation)
 
 
 def remove_module_from_checkpoint_state_dict(state_dict):
