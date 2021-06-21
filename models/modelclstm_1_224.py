@@ -3,22 +3,23 @@ import torch.nn as nn
 
 
 class ConvLSTM(nn.Module):
-    def __init__(self, input_channel, num_filter, b_h_w, kernel_size, stride=1, padding=1):
+    def __init__(self, device, input_channel, num_filter, b_h_w, kernel_size, stride=1, padding=1):
         super().__init__()
         self._conv = nn.Conv2d(in_channels=input_channel + num_filter,
                                out_channels=num_filter*4,
                                kernel_size=kernel_size,
                                stride=stride,
                                padding=padding)
+        self.device = device
         self._batch_size, self._state_height, self._state_width = b_h_w
         # if using requires_grad flag,
         # torch.save will not save parameters indeed although it may be updated every epoch.
         # However, if you use declare an optimizer like Adam(model.parameters()),
         # parameters will not be updated forever.
         # These three tensors should be the same dimension as the cell state.
-        self.Wci = nn.Parameter(torch.zeros(1, num_filter, self._state_height, self._state_width))# .to(device)
-        self.Wcf = nn.Parameter(torch.zeros(1, num_filter, self._state_height, self._state_width))# .to(device)
-        self.Wco = nn.Parameter(torch.zeros(1, num_filter, self._state_height, self._state_width))# .to(device)
+        self.Wci = nn.Parameter(torch.zeros(1, num_filter, self._state_height, self._state_width)).to(self.device)
+        self.Wcf = nn.Parameter(torch.zeros(1, num_filter, self._state_height, self._state_width)).to(self.device)
+        self.Wco = nn.Parameter(torch.zeros(1, num_filter, self._state_height, self._state_width)).to(self.device)
         self._input_channel = input_channel
         self._num_filter = num_filter
 
@@ -28,9 +29,9 @@ class ConvLSTM(nn.Module):
 
         if states is None:
             c = torch.zeros((inputs.size(1), self._num_filter, self._state_height,
-                                  self._state_width), dtype=torch.float)  #.to(device)
+                                  self._state_width), dtype=torch.float).to(self.device)
             h = torch.zeros((inputs.size(1), self._num_filter, self._state_height,
-                             self._state_width), dtype=torch.float)  #.to(device)
+                             self._state_width), dtype=torch.float).to(self.device)
         else:
             h, c = states
 
@@ -39,7 +40,7 @@ class ConvLSTM(nn.Module):
             # initial inputs
             if inputs is None:
                 x = torch.zeros((h.size(0), self._input_channel, self._state_height,
-                                      self._state_width), dtype=torch.float) #.to(device)
+                                      self._state_width), dtype=torch.float).to(self.device)
             else:
                 x = inputs[time_step, :, :, :, :]
             cat_x = torch.cat([x, h], dim=1)
@@ -70,9 +71,9 @@ class TimeDistMaxPooling2D(nn.Module):
 
 
 class ConvLSTMBlock(nn.Module):
-    def __init__(self, b_h_w, batch_size):
+    def __init__(self, device, b_h_w, batch_size):
         super(ConvLSTMBlock, self).__init__()
-        self.convlstm = ConvLSTM(input_channel=3, num_filter=3, b_h_w=b_h_w, kernel_size=3)
+        self.convlstm = ConvLSTM(device=device, input_channel=3, num_filter=3, b_h_w=b_h_w, kernel_size=3)
         self.timedist_mp = TimeDistMaxPooling2D()
         self.bn3d = nn.BatchNorm3d(num_features=batch_size)
         self.relu = nn.ReLU(inplace=True)
@@ -80,11 +81,11 @@ class ConvLSTMBlock(nn.Module):
 
     def forward(self, x):
         x, (_, _) = self.convlstm(seq_len=x.shape[0], inputs=x)
-        print(x.size())
+        # print(x.size())
         x = self.timedist_mp(seq_len=x.shape[0], inputs=x)
-        print(x.size())
+        # print(x.size())
         x = self.bn3d(x)
-        print(x.size())
+        # print(x.size())
         return x
 
 
@@ -96,12 +97,16 @@ class ConvLSTMModel(nn.Module):
     - Returns: a (batch_size, 512) sized tensor
     """
 
-    def __init__(self, config):
+    def __init__(self, config, device):
         super(ConvLSTMModel, self).__init__()
-        self.block1 = ConvLSTMBlock(b_h_w=(1, 224, 224), batch_size=config['clip_size'])
-        self.block2 = ConvLSTMBlock(b_h_w=(1, 112, 112), batch_size=config['clip_size'])
-        self.block3 = ConvLSTMBlock(b_h_w=(1, 56, 56), batch_size=config['clip_size'])
-        self.linear = nn.Linear(14112, out_features=config['num_classes'])
+        self.input_spatial_size = config['input_spatial_size']
+        self.n_linear = 4800 if self.input_spatial_size == 84 else 37632
+        self.halved = int(self.input_spatial_size/2)
+        self.halvedtwice = int(self.halved/2)
+        self.block1 = ConvLSTMBlock(device=device, b_h_w=(1, self.input_spatial_size, self.input_spatial_size), batch_size=config['clip_size'])
+        self.block2 = ConvLSTMBlock(device=device, b_h_w=(1, self.halved, self.halved), batch_size=config['clip_size'])
+        self.block3 = ConvLSTMBlock(device=device, b_h_w=(1, self.halvedtwice, self.halvedtwice), batch_size=config['clip_size'])
+        self.linear = nn.Linear(self.n_linear, out_features=config['num_classes'])
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
 
     def forward(self, x):
@@ -109,17 +114,13 @@ class ConvLSTMModel(nn.Module):
 
         x = x[0]
         x = self.block1(x)
-        print(x.size())
         x = self.block2(x)
-        print(x.size())
         x = self.block3(x)
-        print(x.size())
 
         # averaging features in time dimension
         # x = x.mean(-1).mean(-1).mean(-1)
         x = self.flatten(x)
         x = self.linear(x)
-        print(x.size())
 
         return x
 
