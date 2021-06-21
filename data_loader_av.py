@@ -1,4 +1,5 @@
 import av
+import time
 import torch
 import numpy as np
 
@@ -18,7 +19,7 @@ class VideoFolder(torch.utils.data.Dataset):
                  nclips, step_size, is_val, transform_pre=None, transform_post=None,
                  augmentation_mappings_json=None, augmentation_types_todo=None,
                  get_item_id=False, is_test=False, seq_first=False):
-        if 'something' in root:
+        if 'something' or 'webm' in root:
             self.dataset_object = WebmDataset(json_file_input, json_file_labels,
                                               root, is_test=is_test)
         else:
@@ -49,11 +50,11 @@ class VideoFolder(torch.utils.data.Dataset):
         item = self.json_data[index]
 
         # Open video file
-        reader = av.open(item.path)
+        reader = av.open(item.path)  # Takes around 0.005 seconds.
 
         try:
             imgs = []
-            imgs = [f.to_rgb().to_ndarray() for f in reader.decode(video=0)]
+            imgs = [f.to_rgb().to_ndarray() for f in reader.decode(video=0)] # 0.5 s.
         except (RuntimeError, ZeroDivisionError) as exception:
             print('{}: WEBM reader cannot open {}. Empty '
                   'list returned.'.format(type(exception).__name__, item.path))
