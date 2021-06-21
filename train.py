@@ -70,6 +70,7 @@ def main():
         seq_first = False
     else:
         model = model_def.ConvLSTMModel(config=config, device=device).to(device)
+        model = torch.nn.DataParallel(model, device_ids).to(device)
         input_size = (config['clip_size'], config['batch_size'], 3,
                       config['input_spatial_size'], config['input_spatial_size'])
         seq_first = True
@@ -162,6 +163,7 @@ def main():
                             transform_post=transform_post,
                             get_item_id=True,
                             is_test=True,
+                            seq_first=seq_first
                             )
 
     test_loader = torch.utils.data.DataLoader(
@@ -201,7 +203,7 @@ def main():
     # set end condition by num epochs
     num_epochs = int(config["num_epochs"])
     if num_epochs == -1:
-        num_epochs = 999999
+        num_epochs = 999999 if not args.test_run else 1
 
     print(" > Training is getting started...")
     print(" > Training takes {} epochs.".format(num_epochs))
@@ -243,6 +245,7 @@ def main():
         is_best = val_top1 > best_acc
         best_loss = min(val_loss, best_loss)
         best_acc = max(val_top1, best_acc)
+        wandb.log({'best_acc': best_acc})
         utils.save_checkpoint({
             'epoch': epoch + 1,
             'arch': "Conv4Col",
@@ -334,7 +337,6 @@ def validate(val_loader, model, criterion, args, config, class_to_idx=None, whic
     model.eval()
 
     logits_matrix = []
-    features_matrix = []
     targets_list = []
     item_id_list = []
 
@@ -355,12 +357,11 @@ def validate(val_loader, model, criterion, args, config, class_to_idx=None, whic
             target = target.to(device)
 
             # compute output and loss
-            output, features = model(input_var, config['save_features'])
+            output = model(input_var)
             loss = criterion(output, target)
 
             if which_split == 'test':
                 logits_matrix.append(output.cpu().data.numpy())
-                features_matrix.append(features.cpu().data.numpy())
                 targets_list.append(target.cpu().numpy())
                 item_id_list.append(item_id)
 
@@ -380,12 +381,12 @@ def validate(val_loader, model, criterion, args, config, class_to_idx=None, whic
             end = time.time()
 
             if i % config["print_freq"] == 0:
-                print('Test: [{0}/{1}]\t'
+                print('{0}: [{1}/{2}]\t'
                       'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
                       'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                       'Prec@1 {top1.val:.3f} ({top1.avg:.3f})\t'
                       'Prec@5 {top5.val:.3f} ({top5.avg:.3f})'.format(
-                          i, len(val_loader), batch_time=batch_time, loss=losses,
+                          which_split, i, len(val_loader), batch_time=batch_time, loss=losses,
                           top1=top1, top5=top5))
 
     print(' * Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f}'
@@ -401,7 +402,6 @@ def validate(val_loader, model, criterion, args, config, class_to_idx=None, whic
 
     if args.eval_only:
         logits_matrix = np.concatenate(logits_matrix)
-        features_matrix = np.concatenate(features_matrix)
         targets_list = np.concatenate(targets_list)
         item_id_list = np.concatenate(item_id_list)
         print(logits_matrix.shape, targets_list.shape, item_id_list.shape)
