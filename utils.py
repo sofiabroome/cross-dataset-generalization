@@ -31,6 +31,10 @@ def load_args():
     return args
 
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
 def save_evaluation_as_text(evaluation, str_name, config):
     f = open(config['save_dir'] + f'{str_name}.txt', 'w')
     print(evaluation, end="", file=f)

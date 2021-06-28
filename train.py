@@ -68,15 +68,16 @@ def main():
         input_size = (config['batch_size'], 3, config['clip_size'],
                       config['input_spatial_size'], config['input_spatial_size'])
         seq_first = False
+        ts_summary(model, input_size=input_size)
     else:
         model = model_def.ConvLSTMModel(config=config, device=device).to(device)
-        model = torch.nn.DataParallel(model, device_ids).to(device)
+        print('Number of trainable parameters: ', utils.count_parameters(model))
         input_size = (config['clip_size'], config['batch_size'], 3,
                       config['input_spatial_size'], config['input_spatial_size'])
+        import ipdb; ipdb.set_trace()
+        ts_summary(model, input_size=input_size)
+        model = torch.nn.DataParallel(model, device_ids).to(device)
         seq_first = True
-
-    # Print model summary
-    # ts_summary(model, input_size=input_size)
 
     # optionally resume from a checkpoint
     if args.resume:
@@ -226,7 +227,7 @@ def main():
         val_loss, val_top1, val_top5 = validate(val_loader, model, criterion, args, config, which_split='val')
 
         # set learning rate
-        lr_decayer.step(val_loss, epoch)
+        # lr_decayer.step(val_loss, epoch)
 
         # # plot learning
         # plotter_dict = {}
