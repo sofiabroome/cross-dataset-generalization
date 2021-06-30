@@ -6,10 +6,10 @@ import pytorch_lightning as pl
 # https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py
 
 
-class ConvLSTMModel(pl.LightningModule):
+class StackedConvLSTMModel(nn.Module):
     def __init__(self, input_channels, hidden_per_layer, kernel_size_per_layer,
                  return_all_layers=False, batch_first=True):
-        super(ConvLSTMModel, self).__init__()
+        super(StackedConvLSTMModel, self).__init__()
 
         self.hidden_per_layer = hidden_per_layer
         self.input_channels = input_channels
@@ -68,7 +68,7 @@ class ConvLSTMModel(pl.LightningModule):
             layer_output_list.append(layer_output)
 
         if not self.return_all_layers:
-            layer_output_list = layer_output_list[-1:]
+            layer_output_list = layer_output_list[-1]
 
         return layer_output_list
 
@@ -175,8 +175,8 @@ if __name__ == '__main__':
     trainer = pl.Trainer(fast_dev_run=True)
     # trainer.fit(conv_lstm)
 
-    conv_lstm_model = ConvLSTMModel(input_channels=3, hidden_per_layer=[3, 3, 3],
-                                    kernel_size_per_layer=[5, 5, 5])
+    conv_lstm_model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[3, 3, 3],
+                                           kernel_size_per_layer=[5, 5, 5])
     output_list = conv_lstm_model(torch.rand(5, 10, 3, 224, 224))
     print(len(output_list))
     print(output_list[0].size())

@@ -5,7 +5,7 @@
 
     "input_mode": "av",
 
-    "data_folder": "/Users/sbroome/Downloads/rgb/",
+    "data_folder": "/Users/sbroome/Downloads/rgb/diving48_rgb_webm/",
 
     "json_data_train": "/Users/sbroome/Downloads/Diving48_V2_train.json",
     "json_data_val": "/Users/sbroome/Downloads/Diving48_V2_test.json",
