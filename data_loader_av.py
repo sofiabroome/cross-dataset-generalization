@@ -3,7 +3,7 @@ import time
 import torch
 import numpy as np
 
-from data_parser import WebmDataset, Mp4Dataset
+from data_parser import WebmDataset
 from data_augmentor import Augmentor
 import torchvision
 from transforms_video import *
@@ -19,12 +19,8 @@ class VideoFolder(torch.utils.data.Dataset):
                  nclips, step_size, is_val, transform_pre=None, transform_post=None,
                  augmentation_mappings_json=None, augmentation_types_todo=None,
                  get_item_id=False, is_test=False, seq_first=False):
-        if 'something' or 'webm' in root:
-            self.dataset_object = WebmDataset(json_file_input, json_file_labels,
-                                              root, is_test=is_test)
-        else:
-            self.dataset_object = Mp4Dataset(json_file_input, json_file_labels,
-                                             root, is_test=is_test)
+        self.dataset_object = WebmDataset(json_file_input, json_file_labels,
+                                          root, is_test=is_test)
         self.json_data = self.dataset_object.json_data
         self.classes = self.dataset_object.classes
         self.classes_dict = self.dataset_object.classes_dict
