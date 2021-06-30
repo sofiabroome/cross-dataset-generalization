@@ -2,21 +2,26 @@ import torch
 from torch import nn
 import pytorch_lightning as pl
 
+# The implementation is adapted from
+# https://github.com/ndrplz/ConvLSTM_pytorch/blob/master/convlstm.py
+
 
 class ConvLSTMModel(pl.LightningModule):
-    def __init__(self, input_dim, hidden_per_layer, kernel_size_per_layer,
+    def __init__(self, input_channels, hidden_per_layer, kernel_size_per_layer,
                  return_all_layers=False, batch_first=True):
         super(ConvLSTMModel, self).__init__()
+
         self.hidden_per_layer = hidden_per_layer
-        self.input_dim = input_dim
+        self.input_channels = input_channels
         self.num_layers = len(hidden_per_layer)
         self.return_all_layers = return_all_layers
         self.batch_first = batch_first
         self.blocks = []
+
         assert(len(hidden_per_layer) == len(kernel_size_per_layer))
 
         for i, nb_channels in enumerate(self.hidden_per_layer):
-            cur_input_dim = self.input_dim if i == 0 else self.hidden_per_layer[i - 1]
+            cur_input_dim = self.input_channels if i == 0 else self.hidden_per_layer[i - 1]
             self.blocks.append(ConvLSTMBlock(cur_input_dim, hidden_dim=hidden_per_layer[i],
                                              kernel_size=kernel_size_per_layer[i], bias=True))
         self.conv_lstm_blocks = nn.ModuleList(self.blocks)
@@ -34,7 +39,6 @@ class ConvLSTMModel(pl.LightningModule):
          last_state_list, layer_output
          """
 
-        print(input_tensor.size())
         # find size of different input dimensions
         b, seq_len, _, h, w = input_tensor.size()
 
@@ -162,8 +166,8 @@ class ConvLSTMCell(nn.Module):
 
     def init_hidden(self, batch_size, image_size):
         height, width = image_size
-        return (torch.zeros(batch_size, self.hidden_dim, height, width, device=self.conv.weight.device),
-                torch.zeros(batch_size, self.hidden_dim, height, width, device=self.conv.weight.device))
+        return (torch.zeros(batch_size, self.hidden_dim, height, width),
+                torch.zeros(batch_size, self.hidden_dim, height, width))
 
 
 if __name__ == '__main__':
@@ -171,6 +175,8 @@ if __name__ == '__main__':
     trainer = pl.Trainer(fast_dev_run=True)
     # trainer.fit(conv_lstm)
 
-    conv_lstm_model = ConvLSTMModel(input_dim=3, hidden_per_layer=[3, 3, 3],
+    conv_lstm_model = ConvLSTMModel(input_channels=3, hidden_per_layer=[3, 3, 3],
                                     kernel_size_per_layer=[5, 5, 5])
-    conv_lstm_model(torch.rand(5, 10, 3, 224, 224))
+    output_list = conv_lstm_model(torch.rand(5, 10, 3, 224, 224))
+    print(len(output_list))
+    print(output_list[0].size())
