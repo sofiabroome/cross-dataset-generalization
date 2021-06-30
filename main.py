@@ -20,14 +20,14 @@ class ConvLSTMModule(pl.LightningModule):
         super(ConvLSTMModule, self).__init__()
 
         self.b, self.t, self.c, self.h, self.w = input_size
-        self.seq_first = False
+        self.seq_first = True
         self.num_layers = len(hidden_per_layer)
         self.convlstm_encoder = StackedConvLSTMModel(
             3, hidden_per_layer, kernel_size_per_layer)
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
         self.linear = nn.Linear(
             in_features=self.t * self.c * int(self.h / 2**self.num_layers) * int(self.w/2**self.num_layers),
-            out_features=2)
+            out_features=48)
 
     def forward(self, x) -> torch.Tensor:
         x = self.convlstm_encoder(x)
@@ -35,10 +35,15 @@ class ConvLSTMModule(pl.LightningModule):
         x = self.linear(x)
         return x
 
+    def loss_function(self, y_hat, y):
+        criterion = nn.CrossEntropyLoss()
+        loss = criterion(y_hat, y)
+        return loss
+
     def training_step(self, batch, batch_idx):
         x, y, item_id = batch
         y_hat = self(x)
-        return {'loss': F.cross_entropy(y_hat, y)}
+        return {'loss': self.loss_function(y_hat, y)}
 
     def train_dataloader(self):
         upscale_size_train = int(config['input_spatial_size'] * config["upscale_factor_train"])
@@ -91,7 +96,7 @@ class ConvLSTMModule(pl.LightningModule):
 
 if __name__ == '__main__':
     trainer = pl.Trainer(fast_dev_run=True)
-    input_tensor = torch.rand(5, 10, 3, 224, 224)
+    input_tensor = torch.rand(5, 6, 3, 224, 224)
     convlstm = ConvLSTMModule(input_size=input_tensor.size(), hidden_per_layer=[3, 3, 3],
                               kernel_size_per_layer=[5, 5, 5])
     trainer.fit(convlstm)

@@ -37,7 +37,7 @@
     "num_epochs": 1,
     "print_freq": 1,
 
-    "input_spatial_size": 84,
+    "input_spatial_size": 224,
 
     "column_units": 512,
     "save_features": true

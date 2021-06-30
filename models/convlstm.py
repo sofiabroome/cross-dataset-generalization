@@ -59,7 +59,6 @@ class StackedConvLSTMModel(nn.Module):
         cur_layer_input = input_tensor
 
         for layer_idx in range(self.num_layers):
-            print(cur_layer_input.size())
             layer_output = self.conv_lstm_blocks[layer_idx](
                 cur_layer_input=cur_layer_input,
                 hidden_state=hidden_state[layer_idx])
@@ -77,9 +76,7 @@ class StackedConvLSTMModel(nn.Module):
         for i in range(self.num_layers):
             inv_scaling_factor = 2**i  # Down-sampling resulting from max-pooling
             cur_image_size = (int(image_size[0]/inv_scaling_factor), int(image_size[1]/inv_scaling_factor))
-            print(f'Layer {i} image size: {cur_image_size}')
             init_states.append(self.conv_lstm_blocks[i].conv_lstm.init_hidden(batch_size, cur_image_size))
-        print('\n')
         return init_states
 
 
@@ -93,7 +90,6 @@ class ConvLSTMBlock(nn.Module):
         self.bn = nn.BatchNorm3d(num_features=input_dim)
 
     def forward(self, cur_layer_input, hidden_state):
-        # print('Inside block forward!')
         b, seq_len, channels, height, width = cur_layer_input.size()
         h, c = hidden_state
         output_inner = []
@@ -104,11 +100,9 @@ class ConvLSTMBlock(nn.Module):
             output_inner.append(h)
 
             layer_output = torch.stack(output_inner, dim=1)
-        # print(layer_output.size())
         x = layer_output.view(b * seq_len, channels, height, width)
         x = self.mp2d(x)
         x = x.view(b, seq_len, channels, int(height/2), int(width/2))
-        # print(x.size())
         # x = self.bn(x)
         # print(x.size())
         return x
