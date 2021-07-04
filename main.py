@@ -23,7 +23,7 @@ class ConvLSTMModule(pl.LightningModule):
         self.seq_first = True
         self.num_layers = len(hidden_per_layer)
         self.convlstm_encoder = StackedConvLSTMModel(
-            3, hidden_per_layer, kernel_size_per_layer)
+            input_size, hidden_per_layer, kernel_size_per_layer)
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
         self.linear = nn.Linear(
             in_features=self.t * hidden_per_layer[-1] * int(self.h / 2**self.num_layers) *
@@ -96,16 +96,17 @@ if __name__ == '__main__':
                                           verbose=True,
                                           filename='{epoch}-{val_loss:.2f}-{val_acc:.4f}')
     trainer = pl.Trainer(max_epochs=2, gpus=2, accelerator='dp',
-                       progress_bar_refresh_rate=1,
-                       callbacks=[checkpoint_callback],
-                       weights_save_path=w_save_path,
-                       logger=wandb_logger)
+                         progress_bar_refresh_rate=1,
+                         callbacks=[checkpoint_callback],
+                         weights_save_path=w_save_path,
+                         logger=wandb_logger)
 
     # trainer = pl.Trainer(fast_dev_run=True, gpus=1)
     # trainer = pl.Trainer(fast_dev_run=True)
 
-    conv_lstm = ConvLSTMModule(input_size=(config['batch_size'], 16, 3, 224, 224),
-                               hidden_per_layer=[32, 32, 16],
+    conv_lstm = ConvLSTMModule(input_size=(config['batch_size'], config['clip_size'], 3,
+                                           config['input_spatial_size'], config['input_spatial_size']),
+                               hidden_per_layer=[3, 3, 3],
                                kernel_size_per_layer=[5, 5, 5])
 
     trainer.fit(conv_lstm, dm)

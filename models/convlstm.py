@@ -7,12 +7,12 @@ import pytorch_lightning as pl
 
 
 class StackedConvLSTMModel(nn.Module):
-    def __init__(self, input_channels, hidden_per_layer, kernel_size_per_layer,
+    def __init__(self, input_size, hidden_per_layer, kernel_size_per_layer,
                  return_all_layers=False, batch_first=True):
         super(StackedConvLSTMModel, self).__init__()
 
         self.hidden_per_layer = hidden_per_layer
-        self.input_channels = input_channels
+        self.batch_size, self.t, self.input_channels, self.h, self.w = input_size
         self.num_layers = len(hidden_per_layer)
         self.return_all_layers = return_all_layers
         self.batch_first = batch_first
@@ -25,34 +25,28 @@ class StackedConvLSTMModel(nn.Module):
             self.blocks.append(ConvLSTMBlock(cur_input_dim, hidden_dim=hidden_per_layer[i],
                                              kernel_size=kernel_size_per_layer[i], bias=True))
         self.conv_lstm_blocks = nn.ModuleList(self.blocks)
+        self.init_hidden_states = self._init_hidden()
 
-    def forward(self, input_tensor, hidden_state=None):
+    def forward(self, input_tensor, init_hidden_states=None):
         """
          Parameters
          ----------
          input_tensor: todo
              5-D Tensor either of shape (t, b, c, h, w) or (b, t, c, h, w)
-         hidden_state: todo
+         init_hidden_states: todo
              None. todo implement stateful
          Returns
          -------
          last_state_list, layer_output
          """
 
-        # find size of different input dimensions
-        b, seq_len, _, h, w = input_tensor.size()
-
         if not self.batch_first:
             # (t, b, c, h, w) -> (b, t, c, h, w)
             input_tensor = input_tensor.permute(1, 0, 2, 3, 4)
 
         # Implement stateful ConvLSTM
-        if hidden_state is not None:
+        if init_hidden_states is not None:
             raise NotImplementedError()
-        else:
-            # Since the init is done in forward. Can send image size here
-            hidden_state = self._init_hidden(batch_size=b,
-                                             image_size=(h, w))
 
         layer_output_list = []
 
@@ -61,7 +55,7 @@ class StackedConvLSTMModel(nn.Module):
         for layer_idx in range(self.num_layers):
             layer_output = self.conv_lstm_blocks[layer_idx](
                 cur_layer_input=cur_layer_input,
-                hidden_state=hidden_state[layer_idx])
+                hidden_state=self.init_hidden_states[layer_idx])
 
             cur_layer_input = layer_output
             layer_output_list.append(layer_output)
@@ -71,12 +65,14 @@ class StackedConvLSTMModel(nn.Module):
 
         return layer_output_list
 
-    def _init_hidden(self, batch_size, image_size):
+    def _init_hidden(self):
         init_states = []
         for i in range(self.num_layers):
             inv_scaling_factor = 2**i  # Down-sampling resulting from max-pooling
-            cur_image_size = (int(image_size[0]/inv_scaling_factor), int(image_size[1]/inv_scaling_factor))
-            init_states.append(self.conv_lstm_blocks[i].conv_lstm.init_hidden(batch_size, cur_image_size))
+            cur_image_size = (int(self.h/inv_scaling_factor), int(self.w/inv_scaling_factor))
+            init_states.append(
+                self.conv_lstm_blocks[i].conv_lstm.init_hidden(self.batch_size, cur_image_size)
+            )
         return init_states
 
 
@@ -170,7 +166,8 @@ if __name__ == '__main__':
     trainer = pl.Trainer(fast_dev_run=True)
     # trainer.fit(conv_lstm)
 
-    conv_lstm_model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[3, 3, 3],
+    conv_lstm_model = StackedConvLSTMModel(input_size=(5, 10, 3, 224, 224),
+                                           hidden_per_layer=[3, 3, 3],
                                            kernel_size_per_layer=[5, 5, 5])
     output_list = conv_lstm_model(torch.rand(5, 10, 3, 224, 224))
     print(len(output_list))
