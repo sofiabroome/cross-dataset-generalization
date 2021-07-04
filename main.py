@@ -85,25 +85,33 @@ class ConvLSTMModule(pl.LightningModule):
 
 if __name__ == '__main__':
     wandb_logger = WandbLogger(project='cross-dataset-generalization', config=config)
-    # trainer = pl.Trainer(fast_dev_run=True, gpus=1, accelerator='ddp')
-    # trainer = pl.Trainer(fast_dev_run=True, gpus=1)
-    trainer = pl.Trainer(fast_dev_run=True)
+
     # seed_everything(42, workers=True)
-    # trainer = pl.Trainer()
+
     dm = Diving48DataModule(data_dir=config['data_folder'], config=config)
-    checkpoint_callback = ModelCheckpoint(monitor='val_acc', verbose=True,
-                                          dirpath='xdataset_output/',
-                                          filename='{epoch}-{val_loss:.2f}-{val_acc:.2f}')
-    # trainer = pl.Trainer(max_epochs=config['num_epochs'], gpus=1,
-    #                    progress_bar_refresh_rate=1,
-    #                    callbacks=[checkpoint_callback],
-    #                    weights_save_path='xdataset_output/',
-    #                    logger=wandb_logger)
-    conv_lstm = ConvLSTMModule(input_size=(5, 6, 3, 224, 224), hidden_per_layer=[12, 12, 12],
-                              kernel_size_per_layer=[5, 5, 5])
+    w_save_path = f'xdataset_output/{args.job_identifier}'
+    print('w save path: ', w_save_path)
+
+    checkpoint_callback = ModelCheckpoint(monitor='val_acc', mode='max',
+                                          verbose=True,
+                                          filename='{epoch}-{val_loss:.2f}-{val_acc:.4f}')
+    trainer = pl.Trainer(max_epochs=2, gpus=2, accelerator='dp',
+                       progress_bar_refresh_rate=1,
+                       callbacks=[checkpoint_callback],
+                       weights_save_path=w_save_path,
+                       logger=wandb_logger)
+
+    # trainer = pl.Trainer(fast_dev_run=True, gpus=1)
+    # trainer = pl.Trainer(fast_dev_run=True)
+
+    conv_lstm = ConvLSTMModule(input_size=(config['batch_size'], 16, 3, 224, 224),
+                               hidden_per_layer=[32, 32, 16],
+                               kernel_size_per_layer=[5, 5, 5])
+
     trainer.fit(conv_lstm, dm)
+
     # trainer.test(conv_lstm, datamodule=dm)
-    # trainer.test(datamodule=dm,
-    #              ckpt_path='xdataset_output/cross-dataset-generalization/1gtp4f1a/checkpoints/epoch=0-val_loss=3.30-val_acc=0.10.ckpt')
+    # trainer.test(datamodule=dm, model=conv_lstm,
+    #              ckpt_path='xdataset_output/None/epoch=1-val_loss=3.47-val_acc=0.07.ckpt')
 
     
