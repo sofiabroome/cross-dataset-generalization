@@ -26,8 +26,8 @@ class ConvLSTMModule(pl.LightningModule):
             3, hidden_per_layer, kernel_size_per_layer)
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
         self.linear = nn.Linear(
-            in_features=self.t * self.c * int(self.h / 2**self.num_layers) * int(self.w/2**self.num_layers),
-            out_features=48)
+            in_features=self.t * hidden_per_layer[-1] * int(self.h / 2**self.num_layers) *
+            int(self.w/2**self.num_layers), out_features=48)
         self.accuracy = torchmetrics.Accuracy()
 
     def forward(self, x) -> torch.Tensor:
@@ -87,19 +87,19 @@ if __name__ == '__main__':
     wandb_logger = WandbLogger(project='cross-dataset-generalization', config=config)
     # trainer = pl.Trainer(fast_dev_run=True, gpus=1, accelerator='ddp')
     # trainer = pl.Trainer(fast_dev_run=True, gpus=1)
-    # trainer = pl.Trainer(fast_dev_run=True)
+    trainer = pl.Trainer(fast_dev_run=True)
     # seed_everything(42, workers=True)
     # trainer = pl.Trainer()
     dm = Diving48DataModule(data_dir=config['data_folder'], config=config)
     checkpoint_callback = ModelCheckpoint(monitor='val_acc', verbose=True,
                                           dirpath='xdataset_output/',
                                           filename='{epoch}-{val_loss:.2f}-{val_acc:.2f}')
-    trainer = pl.Trainer(max_epochs=config['num_epochs'], gpus=1,
-                       progress_bar_refresh_rate=1,
-                       callbacks=[checkpoint_callback],
-                       weights_save_path='xdataset_output/',
-                       logger=wandb_logger)
-    conv_lstm = ConvLSTMModule(input_size=(5, 16, 3, 224, 224), hidden_per_layer=[32, 32, 32],
+    # trainer = pl.Trainer(max_epochs=config['num_epochs'], gpus=1,
+    #                    progress_bar_refresh_rate=1,
+    #                    callbacks=[checkpoint_callback],
+    #                    weights_save_path='xdataset_output/',
+    #                    logger=wandb_logger)
+    conv_lstm = ConvLSTMModule(input_size=(5, 6, 3, 224, 224), hidden_per_layer=[12, 12, 12],
                               kernel_size_per_layer=[5, 5, 5])
     trainer.fit(conv_lstm, dm)
     # trainer.test(conv_lstm, datamodule=dm)

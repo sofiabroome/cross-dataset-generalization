@@ -90,8 +90,9 @@ class ConvLSTMBlock(nn.Module):
         self.bn = nn.BatchNorm3d(num_features=input_dim)
 
     def forward(self, cur_layer_input, hidden_state):
-        b, seq_len, channels, height, width = cur_layer_input.size()
+        b, seq_len, in_channels, height, width = cur_layer_input.size()
         h, c = hidden_state
+        out_channels = h.size()[1]
         output_inner = []
         for t in range(seq_len):
             h, c = self.conv_lstm(
@@ -100,9 +101,9 @@ class ConvLSTMBlock(nn.Module):
             output_inner.append(h)
 
             layer_output = torch.stack(output_inner, dim=1)
-        x = layer_output.view(b * seq_len, channels, height, width)
+        x = layer_output.view(b * seq_len, out_channels, height, width)
         x = self.mp2d(x)
-        x = x.view(b, seq_len, channels, int(height/2), int(width/2))
+        x = x.view(b, seq_len, out_channels, int(height/2), int(width/2))
         # x = self.bn(x)
         # print(x.size())
         return x
