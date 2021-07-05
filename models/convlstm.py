@@ -28,13 +28,13 @@ class StackedConvLSTMModel(nn.Module):
                                              stride=self.conv_stride, bias=True))
         self.conv_lstm_blocks = nn.ModuleList(self.blocks)
 
-    def forward(self, input_tensor, hidden_state=None):
+    def forward(self, input_tensor, initial_hidden_states=None):
         """
          Parameters
          ----------
          input_tensor: todo
              5-D Tensor either of shape (t, b, c, h, w) or (b, t, c, h, w)
-         hidden_state: todo
+         initial_hidden_states: todo
              None. todo implement stateful
          Returns
          -------
@@ -49,12 +49,12 @@ class StackedConvLSTMModel(nn.Module):
             input_tensor = input_tensor.permute(1, 0, 2, 3, 4)
 
         # Implement stateful ConvLSTM
-        if hidden_state is not None:
+        if initial_hidden_states is not None:
             raise NotImplementedError()
         else:
             # Since the init is done in forward. Can send image size here
-            hidden_state = self._init_hidden(batch_size=b,
-                                             image_size=(h, w))
+            initial_hidden_states = self._init_hidden(batch_size=b,
+                                                      image_size=(h, w))
 
         layer_output_list = []
 
@@ -63,7 +63,7 @@ class StackedConvLSTMModel(nn.Module):
         for layer_idx in range(self.num_layers):
             layer_output = self.conv_lstm_blocks[layer_idx](
                 cur_layer_input=cur_layer_input,
-                hidden_state=hidden_state[layer_idx])
+                initial_hidden_states=initial_hidden_states[layer_idx])
 
             cur_layer_input = layer_output
             layer_output_list.append(layer_output)
@@ -78,7 +78,8 @@ class StackedConvLSTMModel(nn.Module):
         for i in range(self.num_layers):
             inv_scaling_factor = 2**i  # Down-sampling resulting from max-pooling
             cur_image_size = (int(image_size[0]/inv_scaling_factor), int(image_size[1]/inv_scaling_factor))
-            # cur_image_size = (int(cur_image_size[0]/self.conv_stride), int(cur_image_size[1]/self.conv_stride))
+            if i != 0:
+                cur_image_size = (int(cur_image_size[0]/self.conv_stride), int(cur_image_size[1]/self.conv_stride))
             init_states.append(self.conv_lstm_blocks[i].conv_lstm.init_hidden(batch_size, cur_image_size))
         return init_states
 
@@ -93,9 +94,9 @@ class ConvLSTMBlock(nn.Module):
         self.mp2d = nn.MaxPool2d(kernel_size=2, stride=2)
         self.bn = nn.BatchNorm3d(num_features=input_dim)
 
-    def forward(self, cur_layer_input, hidden_state):
+    def forward(self, cur_layer_input, initial_hidden_states):
         b, seq_len, in_channels, _, _ = cur_layer_input.size()
-        h, c = hidden_state
+        h, c = initial_hidden_states
         out_channels = h.size()[1]
         output_inner = []
         for t in range(seq_len):
@@ -152,6 +153,10 @@ class ConvLSTMCell(nn.Module):
                               bias=self.bias)
 
     def forward(self, input_tensor, cur_state):
+
+        if self.stride > 1:  # TODO conv stride >1 requires separate input conv.
+            print('Conv strides >1 is not implemented yet.')
+            raise NotImplementedError()
         h_cur, c_cur = cur_state
 
         combined = torch.cat([input_tensor, h_cur], dim=1)  # concatenate along channel axis
@@ -171,7 +176,8 @@ class ConvLSTMCell(nn.Module):
     def init_hidden(self, batch_size, image_size):
         height, width = image_size
         return (torch.zeros(batch_size, self.hidden_dim, height, width, device=self.conv.weight.device),
-                torch.zeros(batch_size, self.hidden_dim, height, width, device=self.conv.weight.device))
+                torch.zeros(batch_size, self.hidden_dim, int(height/self.stride), int(width/self.stride),
+                device=self.conv.weight.device))
 
 
 if __name__ == '__main__':
