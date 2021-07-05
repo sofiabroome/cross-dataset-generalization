@@ -20,7 +20,11 @@
     "num_classes": 48,
     "batch_size": 5,
     "clip_size": 6,
-    
+
+    "hidden_per_layer": [32, 32, 32],
+    "kernel_size_per_layer": [5, 5, 5],
+    "conv_stride": 1,
+
     "nclips_train_val": 1,
     "nclips_test": 1,
 
