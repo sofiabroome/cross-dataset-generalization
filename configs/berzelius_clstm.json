@@ -19,8 +19,8 @@
     "batch_size": 16,
     "clip_size": 16,
 
-    "hidden_per_layer": [32, 32, 32],
-    "kernel_size_per_layer": [5, 5, 5],
+    "hidden_per_layer": [32, 32, 32, 32, 32],
+    "kernel_size_per_layer": [5, 5, 5, 5, 5],
     "conv_stride": 1,
     
     "nclips_train_val": 1,
@@ -34,7 +34,7 @@
     "momentum": 0.9,
     "weight_decay": 0.00001,
     "num_epochs": 500,
-    "early_stopping_patience": 2,
+    "early_stopping_patience": 20,
 
     "input_spatial_size": 224
 }

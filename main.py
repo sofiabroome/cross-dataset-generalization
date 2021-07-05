@@ -43,6 +43,9 @@ def main():
                                    lr=config['lr'], momentum=config['momentum'],
                                    weight_decay=config['weight_decay'])
 
+    if config['model_name'] == 'lit_3dconv':
+        pass
+
     checkpoint_callback = ModelCheckpoint(monitor='val_acc', mode='max',
                                           verbose=True,
                                           filename='{epoch}-{val_loss:.2f}-{val_acc:.4f}')
