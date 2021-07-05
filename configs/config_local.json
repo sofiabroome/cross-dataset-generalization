@@ -39,6 +39,7 @@
     "momentum": 0.9,
     "weight_decay": 0.00001,
     "num_epochs": 1,
+    "early_stopping_patience": 2,
     "print_freq": 1,
 
     "input_spatial_size": 224,

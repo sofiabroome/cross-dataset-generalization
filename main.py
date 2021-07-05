@@ -2,7 +2,7 @@ import os
 import torch
 from torch import nn
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.plugins import DDPPlugin
@@ -115,11 +115,18 @@ if __name__ == '__main__':
                                           verbose=True,
                                           filename='{epoch}-{val_loss:.2f}-{val_acc:.4f}')
 
+    early_stop_callback = EarlyStopping(
+        monitor='val_acc',
+        min_delta=0.00,
+        patience=config['early_stopping_patience'],
+        verbose=False,
+        mode='max'
+    )
 
     trainer = pl.Trainer.from_argparse_args(
         args, max_epochs=config['num_epochs'],
         progress_bar_refresh_rate=1,
-        callbacks=[checkpoint_callback],
+        callbacks=[checkpoint_callback, early_stop_callback],
         weights_save_path=os.path.join(config['output_dir'], args.job_identifier),
         logger=wandb_logger,
         plugins=DDPPlugin(find_unused_parameters=False))
