@@ -1,3 +1,4 @@
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from models.convlstm import StackedConvLSTMModel
 import pytorch_lightning as pl
 from torch import nn
@@ -78,7 +79,11 @@ class ConvLSTMModule(pl.LightningModule):
         return loss, acc, top5_acc
 
     def configure_optimizers(self):
-        return torch.optim.SGD(self.parameters(), self.lr,
-                               momentum=self.momentum,
-                               weight_decay=self.weight_decay)
+        optimizer = torch.optim.SGD(
+            self.parameters(), self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
+        scheduler = ReduceLROnPlateau(
+            optimizer, 'max', factor=0.5, patience=2, verbose=True)
+        return {'optimizer': optimizer,
+                'lr_scheduler': scheduler,
+                'monitor': 'val_acc'}
 
