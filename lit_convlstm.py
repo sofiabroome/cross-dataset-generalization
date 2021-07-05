@@ -48,7 +48,7 @@ class ConvLSTMModule(pl.LightningModule):
         x, y, item_id = batch
         y_hat = self(x)
         loss, acc = self.get_loss_acc(y_hat, y)
-        self.log('val_acc', acc, prog_bar=True)
+        self.log('val_acc', acc, prog_bar=True)  # By default, on_step=False, on_epoch=True
         self.log('val_loss', loss)
         return {'val_loss': loss, 'val_acc': acc}
 
