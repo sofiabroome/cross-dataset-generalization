@@ -1,3 +1,4 @@
+import os
 import torch
 from torch import nn
 import pytorch_lightning as pl
@@ -6,29 +7,27 @@ from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import WandbLogger
 
 import utils
+import argparse
 import torchmetrics
 from data_module import Diving48DataModule
 from models.convlstm import StackedConvLSTMModel
 
-# load configurations
-args = utils.load_args()
-config = utils.load_json_config(args.config)
-
 
 class ConvLSTMModule(pl.LightningModule):
-    def __init__(self, input_size, hidden_per_layer, kernel_size_per_layer):
+    def __init__(self, input_size, hidden_per_layer, kernel_size_per_layer, conv_stride):
         super(ConvLSTMModule, self).__init__()
 
         self.b, self.t, self.c, self.h, self.w = input_size
         self.seq_first = True
         self.num_layers = len(hidden_per_layer)
         self.convlstm_encoder = StackedConvLSTMModel(
-            3, hidden_per_layer, kernel_size_per_layer)
+            self.c, hidden_per_layer, kernel_size_per_layer, conv_stride)
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
         self.linear = nn.Linear(
-            in_features=self.t * hidden_per_layer[-1] * int(self.h / 2**self.num_layers) *
-            int(self.w/2**self.num_layers), out_features=48)
+            in_features=self.t * hidden_per_layer[-1] * int(self.h /(2**self.num_layers*conv_stride)) *
+            int(self.w/(2**self.num_layers*conv_stride)), out_features=48)
         self.accuracy = torchmetrics.Accuracy()
+        self.save_hyperparameters() 
 
     def forward(self, x) -> torch.Tensor:
         x = self.convlstm_encoder(x)
@@ -84,29 +83,46 @@ class ConvLSTMModule(pl.LightningModule):
 
 
 if __name__ == '__main__':
+    # load configurations
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--config', '-c', help='json config file path')
+    parser.add_argument('--eval_only', '-e', action='store_true', 
+                        help="evaluate trained model on validation data.")
+    parser.add_argument('--resume', '-r', action='store_true',
+                        help="resume training from a given checkpoint.")
+    parser.add_argument('--test_run', action='store_true',
+                        help="quick test run")
+    parser.add_argument('--job_identifier', '-j', help='Unique identifier for run,'
+                                                       'avoids overwriting model.')
+    parser = pl.Trainer.add_argparse_args(parser)
+    args = parser.parse_args()
+
+    config = utils.load_json_config(args.config)
+
     wandb_logger = WandbLogger(project='cross-dataset-generalization', config=config)
 
-    # seed_everything(42, workers=True)
+    seed_everything(42, workers=True)
 
-    dm = Diving48DataModule(data_dir=config['data_folder'], config=config)
-    w_save_path = f'xdataset_output/{args.job_identifier}'
-    print('w save path: ', w_save_path)
+    conv_lstm = ConvLSTMModule(input_size=(config['batch_size'], config['clip_size'], 3,
+                               config['input_spatial_size'], config['input_spatial_size']),
+                               hidden_per_layer=config['hidden_per_layer'],
+                               kernel_size_per_layer=config['kernel_size_per_layer'],
+                               conv_stride=config['conv_stride'])
 
     checkpoint_callback = ModelCheckpoint(monitor='val_acc', mode='max',
                                           verbose=True,
                                           filename='{epoch}-{val_loss:.2f}-{val_acc:.4f}')
-    trainer = pl.Trainer(max_epochs=2, gpus=2, accelerator='dp',
-                       progress_bar_refresh_rate=1,
-                       callbacks=[checkpoint_callback],
-                       weights_save_path=w_save_path,
-                       logger=wandb_logger)
 
-    # trainer = pl.Trainer(fast_dev_run=True, gpus=1)
-    # trainer = pl.Trainer(fast_dev_run=True)
 
-    conv_lstm = ConvLSTMModule(input_size=(config['batch_size'], 16, 3, 224, 224),
-                               hidden_per_layer=[32, 32, 16],
-                               kernel_size_per_layer=[5, 5, 5])
+    trainer = pl.Trainer.from_argparse_args(
+        args, max_epochs=2,
+        progress_bar_refresh_rate=1,
+        callbacks=[checkpoint_callback],
+        weights_save_path=os.path.join(config['output_dir'], args.job_identifier),
+        logger=wandb_logger)
+
+    dm = Diving48DataModule(data_dir=config['data_folder'], config=config)
 
     trainer.fit(conv_lstm, dm)
 

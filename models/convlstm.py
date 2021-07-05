@@ -8,11 +8,12 @@ import pytorch_lightning as pl
 
 class StackedConvLSTMModel(nn.Module):
     def __init__(self, input_channels, hidden_per_layer, kernel_size_per_layer,
-                 return_all_layers=False, batch_first=True):
+                 conv_stride, return_all_layers=False, batch_first=True):
         super(StackedConvLSTMModel, self).__init__()
 
         self.hidden_per_layer = hidden_per_layer
         self.input_channels = input_channels
+        self.conv_stride = conv_stride
         self.num_layers = len(hidden_per_layer)
         self.return_all_layers = return_all_layers
         self.batch_first = batch_first
@@ -23,7 +24,8 @@ class StackedConvLSTMModel(nn.Module):
         for i, nb_channels in enumerate(self.hidden_per_layer):
             cur_input_dim = self.input_channels if i == 0 else self.hidden_per_layer[i - 1]
             self.blocks.append(ConvLSTMBlock(cur_input_dim, hidden_dim=hidden_per_layer[i],
-                                             kernel_size=kernel_size_per_layer[i], bias=True))
+                                             kernel_size=kernel_size_per_layer[i],
+                                             stride=self.conv_stride, bias=True))
         self.conv_lstm_blocks = nn.ModuleList(self.blocks)
 
     def forward(self, input_tensor, hidden_state=None):
@@ -76,21 +78,23 @@ class StackedConvLSTMModel(nn.Module):
         for i in range(self.num_layers):
             inv_scaling_factor = 2**i  # Down-sampling resulting from max-pooling
             cur_image_size = (int(image_size[0]/inv_scaling_factor), int(image_size[1]/inv_scaling_factor))
+            # cur_image_size = (int(cur_image_size[0]/self.conv_stride), int(cur_image_size[1]/self.conv_stride))
             init_states.append(self.conv_lstm_blocks[i].conv_lstm.init_hidden(batch_size, cur_image_size))
         return init_states
 
 
 class ConvLSTMBlock(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, bias):
+    def __init__(self, input_dim, hidden_dim, kernel_size, stride, bias):
         super().__init__()
         self.conv_lstm = ConvLSTMCell(input_dim, hidden_dim=hidden_dim,
-                                      kernel_size=[kernel_size, kernel_size], bias=bias)
+                                      kernel_size=[kernel_size, kernel_size],
+                                      stride=stride, bias=bias)
         self.mp2d = nn.MaxPool2d(kernel_size=2, stride=2)
         self.bn = nn.BatchNorm3d(num_features=input_dim)
 
     def forward(self, cur_layer_input, hidden_state):
-        b, seq_len, in_channels, height, width = cur_layer_input.size()
+        b, seq_len, in_channels, _, _ = cur_layer_input.size()
         h, c = hidden_state
         out_channels = h.size()[1]
         output_inner = []
@@ -101,6 +105,7 @@ class ConvLSTMBlock(nn.Module):
             output_inner.append(h)
 
             layer_output = torch.stack(output_inner, dim=1)
+        _, _, _, height, width = cur_layer_input.size()  # h and w can change depending on stride
         x = layer_output.view(b * seq_len, out_channels, height, width)
         x = self.mp2d(x)
         x = x.view(b, seq_len, out_channels, int(height/2), int(width/2))
@@ -111,7 +116,7 @@ class ConvLSTMBlock(nn.Module):
 
 class ConvLSTMCell(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, kernel_size, bias):
+    def __init__(self, input_dim, hidden_dim, kernel_size, stride, bias):
         """
         Initialize ConvLSTM cell.
 
@@ -123,6 +128,8 @@ class ConvLSTMCell(nn.Module):
             Number of channels of hidden state.
         kernel_size: (int, int)
             Size of the convolutional kernel.
+        stride: int
+            Convolutional stride.
         bias: bool
             Whether or not to add the bias.
         """
@@ -134,11 +141,13 @@ class ConvLSTMCell(nn.Module):
 
         self.kernel_size = kernel_size
         self.padding = kernel_size[0] // 2, kernel_size[1] // 2
+        self.stride = stride
         self.bias = bias
 
         self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
                               out_channels=4 * self.hidden_dim,
                               kernel_size=self.kernel_size,
+                              stride=self.stride,
                               padding=self.padding,
                               bias=self.bias)
 
@@ -161,13 +170,13 @@ class ConvLSTMCell(nn.Module):
 
     def init_hidden(self, batch_size, image_size):
         height, width = image_size
-        return (torch.zeros(batch_size, self.hidden_dim, height, width),
-                torch.zeros(batch_size, self.hidden_dim, height, width))
+        return (torch.zeros(batch_size, self.hidden_dim, height, width, device=self.conv.weight.device),
+                torch.zeros(batch_size, self.hidden_dim, height, width, device=self.conv.weight.device))
 
 
 if __name__ == '__main__':
 
-    trainer = pl.Trainer(fast_dev_run=True)
+    trainer = pl.Trainer(fast_dev_run=True, gpus=1)
     # trainer.fit(conv_lstm)
 
     conv_lstm_model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[3, 3, 3],
