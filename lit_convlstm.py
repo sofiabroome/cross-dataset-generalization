@@ -7,7 +7,7 @@ import torch
 
 class ConvLSTMModule(pl.LightningModule):
     def __init__(self, input_size, hidden_per_layer, kernel_size_per_layer, conv_stride,
-                 lr, momentum, weight_decay):
+                 lr, momentum, weight_decay, dropout):
         super(ConvLSTMModule, self).__init__()
 
         self.b, self.t, self.c, self.h, self.w = input_size
@@ -19,7 +19,7 @@ class ConvLSTMModule(pl.LightningModule):
         self.convlstm_encoder = StackedConvLSTMModel(
             self.c, hidden_per_layer, kernel_size_per_layer, conv_stride)
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
-        self.dropout = nn.Dropout(p=0.5)
+        self.dropout = nn.Dropout(p=dropout)
         self.linear = nn.Linear(
             in_features=self.t * hidden_per_layer[-1] *
             int(self.h /(2**self.num_layers*conv_stride)) *

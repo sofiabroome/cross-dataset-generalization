@@ -41,7 +41,7 @@ def main():
                                    kernel_size_per_layer=config['kernel_size_per_layer'],
                                    conv_stride=config['conv_stride'],
                                    lr=config['lr'], momentum=config['momentum'],
-                                   weight_decay=config['weight_decay'])
+                                   weight_decay=config['weight_decay'], dropout=config['dropout'])
 
     if config['model_name'] == 'lit_3dconv':
         pass
