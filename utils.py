@@ -9,28 +9,6 @@ import glob
 import numpy as np
 
 
-def load_args():
-    parser = argparse.ArgumentParser(description='Smth-Smth example training')
-    parser.add_argument('--config', '-c', help='json config file path')
-    parser.add_argument('--eval_only', '-e', action='store_true', 
-                        help="evaluate trained model on validation data.")
-    parser.add_argument('--resume', '-r', action='store_true',
-                        help="resume training from a given checkpoint.")
-    parser.add_argument('--gpus', '-g', help="GPU ids to use. Please"
-                         " enter a comma separated list")
-    parser.add_argument('--use_cuda', action='store_true',
-                        help="to use GPUs")
-    parser.add_argument('--test_run', action='store_true',
-                        help="quick test run")
-    parser.add_argument('--job_identifier', '-j', help='Unique identifier for run,'
-                                                       'avoids overwriting model.')
-    args = parser.parse_args()
-    if len(sys.argv) < 2:
-        parser.print_help()
-        sys.exit(1)
-    return args
-
-
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
