@@ -5,6 +5,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning import seed_everything
 from pytorch_lightning.loggers import WandbLogger
+from pytorch_lightning.plugins import DDPPlugin
 
 import utils
 import argparse
@@ -116,11 +117,15 @@ if __name__ == '__main__':
 
 
     trainer = pl.Trainer.from_argparse_args(
-        args, max_epochs=2,
+        args, max_epochs=config['num_epochs'],
         progress_bar_refresh_rate=1,
         callbacks=[checkpoint_callback],
         weights_save_path=os.path.join(config['output_dir'], args.job_identifier),
-        logger=wandb_logger)
+        logger=wandb_logger,
+        plugins=DDPPlugin(find_unused_parameters=False))
+
+    if trainer.gpus is not None:
+        config['num_workers'] = int(trainer.gpus/8 * 128)
 
     dm = Diving48DataModule(data_dir=config['data_folder'], config=config)
 

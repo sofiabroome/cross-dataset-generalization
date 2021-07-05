@@ -92,7 +92,7 @@ class ConvLSTMBlock(nn.Module):
                                       kernel_size=[kernel_size, kernel_size],
                                       stride=stride, bias=bias)
         self.mp2d = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.bn = nn.BatchNorm3d(num_features=input_dim)
+        self.bn = nn.BatchNorm3d(num_features=hidden_dim)
 
     def forward(self, cur_layer_input, initial_hidden_states):
         b, seq_len, in_channels, _, _ = cur_layer_input.size()
@@ -110,7 +110,9 @@ class ConvLSTMBlock(nn.Module):
         x = layer_output.view(b * seq_len, out_channels, height, width)
         x = self.mp2d(x)
         x = x.view(b, seq_len, out_channels, int(height/2), int(width/2))
-        # x = self.bn(x)
+        x = x.permute(0, 2, 1, 3, 4)
+        x = self.bn(x)
+        x = x.permute(0, 2, 1, 3, 4)
         # print(x.size())
         return x
 
