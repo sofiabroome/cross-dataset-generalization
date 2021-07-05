@@ -19,6 +19,7 @@ class ConvLSTMModule(pl.LightningModule):
         self.convlstm_encoder = StackedConvLSTMModel(
             self.c, hidden_per_layer, kernel_size_per_layer, conv_stride)
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
+        self.dropout = nn.Dropout(p=0.5)
         self.linear = nn.Linear(
             in_features=self.t * hidden_per_layer[-1] *
             int(self.h /(2**self.num_layers*conv_stride)) *
@@ -32,6 +33,7 @@ class ConvLSTMModule(pl.LightningModule):
     def forward(self, x) -> torch.Tensor:
         x = self.convlstm_encoder(x)
         x = self.flatten(x)
+        x = self.dropout(x)
         x = self.linear(x)
         return x
 
