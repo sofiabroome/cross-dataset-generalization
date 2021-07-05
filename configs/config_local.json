@@ -1,5 +1,5 @@
 {
-    "model_name": "modelclstm_1_224",
+    "model_name": "lit_convlstm",
     "output_dir": "trained_models/",
     "checkpoint_path": "-1",
 

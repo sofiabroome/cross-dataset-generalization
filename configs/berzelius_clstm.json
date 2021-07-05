@@ -1,5 +1,5 @@
 {
-    "model_name": "modelclstm_1_224",
+    "model_name": "lit_convlstm",
     "output_dir": "/proj/berzelius_pilot/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
     "checkpoint_path": "-1",
 
