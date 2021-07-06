@@ -8,13 +8,14 @@ import torch
 
 class ConvLSTMModule(pl.LightningModule):
     def __init__(self, input_size, hidden_per_layer, kernel_size_per_layer, conv_stride,
-                 lr, momentum, weight_decay, dropout):
+                 lr, reduce_lr, momentum, weight_decay, dropout):
         super(ConvLSTMModule, self).__init__()
 
         self.b, self.t, self.c, self.h, self.w = input_size
         self.seq_first = True
         self.num_layers = len(hidden_per_layer)
         self.lr = lr
+        self.reduce_lr = reduce_lr
         self.momentum = momentum
         self.weight_decay = weight_decay
         self.convlstm_encoder = StackedConvLSTMModel(
@@ -81,9 +82,12 @@ class ConvLSTMModule(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.SGD(
             self.parameters(), self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
-        scheduler = ReduceLROnPlateau(
-            optimizer, 'max', factor=0.5, patience=2, verbose=True)
-        return {'optimizer': optimizer,
-                'lr_scheduler': scheduler,
-                'monitor': 'val_acc'}
+        if self.reduce_lr:
+            scheduler = ReduceLROnPlateau(
+                optimizer, 'max', factor=0.5, patience=2, verbose=True)
+            return {'optimizer': optimizer,
+                    'lr_scheduler': scheduler,
+                    'monitor': 'val_acc'}
+        else:
+            return optimizer
 
