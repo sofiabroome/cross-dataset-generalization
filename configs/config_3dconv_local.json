@@ -26,6 +26,7 @@
     "step_size_test": 1,
 
     "lr": 0.01,
+    "reduce_lr": 0,
     "last_lr": 0.00001,
     "momentum": 0.9,
     "num_epochs": 1,

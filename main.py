@@ -41,14 +41,16 @@ def main():
                                hidden_per_layer=config['hidden_per_layer'],
                                kernel_size_per_layer=config['kernel_size_per_layer'],
                                conv_stride=config['conv_stride'],
-                               lr=config['lr'], momentum=config['momentum'],
-                               weight_decay=config['weight_decay'], dropout=config['dropout'])
+                               lr=config['lr'], reduce_lr=config['reduce_lr'],
+                               momentum=config['momentum'], weight_decay=config['weight_decay'],
+                               dropout=config['dropout'])
 
     if config['model_name'] == 'lit_3dconv':
         model = ThreeDCNNModule(input_size=(config['batch_size'], config['clip_size'], 3,
                                 config['input_spatial_size'], config['input_spatial_size']),
-                                lr=config['lr'], momentum=config['momentum'],
-                                weight_decay=config['weight_decay'], dropout=config['dropout'])
+                                lr=config['lr'], reduce_lr=config['reduce_lr'],
+                                momentum=config['momentum'], weight_decay=config['weight_decay'],
+                                dropout=config['dropout'])
 
     checkpoint_callback = ModelCheckpoint(monitor='val_acc', mode='max',
                                           verbose=True,
