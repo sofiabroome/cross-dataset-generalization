@@ -14,6 +14,7 @@ class ConvLSTMModule(pl.LightningModule):
         self.b, self.t, self.c, self.h, self.w = input_size
         self.seq_first = True
         self.num_layers = len(hidden_per_layer)
+        self.optimizer = 'Adadelta'
         self.lr = lr
         self.reduce_lr = reduce_lr
         self.momentum = momentum
@@ -80,8 +81,14 @@ class ConvLSTMModule(pl.LightningModule):
         return loss, acc, top5_acc
 
     def configure_optimizers(self):
-        optimizer = torch.optim.SGD(
-            self.parameters(), self.lr, momentum=self.momentum, weight_decay=self.weight_decay)
+        if self.optimizer == 'SGD':
+            optimizer = torch.optim.SGD(
+                self.parameters(), self.lr, momentum=self.momentum,
+                weight_decay=self.weight_decay)
+
+        if self.optimizer == 'Adadelta':
+            optimizer = torch.optim.Adadelta(
+                self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         if self.reduce_lr:
             scheduler = ReduceLROnPlateau(
                 optimizer, 'max', factor=0.5, patience=2, verbose=True)

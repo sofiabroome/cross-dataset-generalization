@@ -35,3 +35,15 @@ class ThreeDCNNModule(ConvLSTMModule):
         x = self.dropout(x)
         x = self.linear(x)
         return x
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.Adam(
+            self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        if self.reduce_lr:
+            scheduler = ReduceLROnPlateau(
+                optimizer, 'max', factor=0.5, patience=2, verbose=True)
+            return {'optimizer': optimizer,
+                    'lr_scheduler': scheduler,
+                    'monitor': 'val_acc'}
+        else:
+            return optimizer
