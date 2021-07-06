@@ -1,0 +1,38 @@
+{
+    "model_name": "lit_3dconv",
+    "output_dir": "trained_models/",
+    "checkpoint_path": "-1",
+
+    "data_folder": "/Users/sbroome/Downloads/rgb/diving48_rgb_webm/",
+
+    "json_data_train": "/Users/sbroome/Downloads/Diving48_V2_train.json",
+    "json_data_val": "/Users/sbroome/Downloads/Diving48_V2_test.json",
+    "json_data_test": "/Users/sbroome/Downloads/Diving48_V2_test.json",
+
+    "json_file_labels": "/Users/sbroome/Downloads/Diving48_vocab.json",
+    "nb_train_samples": 13525,
+    "nb_val_samples": 1502,
+
+    "num_workers": 0,
+
+    "num_classes": 48,
+    "batch_size": 5,
+    "clip_size": 6,
+
+    "nclips_train_val": 1,
+    "nclips_test": 1,
+
+    "step_size_train_val": 1,
+    "step_size_test": 1,
+
+    "lr": 0.01,
+    "last_lr": 0.00001,
+    "momentum": 0.9,
+    "num_epochs": 1,
+
+    "early_stopping_patience": 20,
+    "weight_decay": 0.00001,
+    "dropout": 0.5,
+
+    "input_spatial_size": 224
+}

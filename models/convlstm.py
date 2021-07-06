@@ -184,11 +184,9 @@ class ConvLSTMCell(nn.Module):
 
 if __name__ == '__main__':
 
-    trainer = pl.Trainer(fast_dev_run=True, gpus=1)
-    # trainer.fit(conv_lstm)
-
-    conv_lstm_model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[3, 3, 3],
-                                           kernel_size_per_layer=[5, 5, 5])
-    output_list = conv_lstm_model(torch.rand(5, 10, 3, 224, 224))
+    conv_lstm_model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[3, 3, 3, 3],
+                                           kernel_size_per_layer=[5, 5, 5, 5],
+                                           conv_stride=1)
+    output_list = conv_lstm_model(torch.rand(1, 16, 3, 224, 224))
     print(len(output_list))
     print(output_list[0].size())

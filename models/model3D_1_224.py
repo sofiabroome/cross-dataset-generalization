@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 
-class Model(nn.Module):
+class VGGStyle3DCNN(nn.Module):
     """
     - A VGG-style 3D CNN with 11 layers.
     - Kernel size is kept 3 for all three dimensions - (time, H, W)
@@ -15,8 +15,8 @@ class Model(nn.Module):
     - Returns: a (batch_size, 512) sized tensor
     """
 
-    def __init__(self, column_units):
-        super(Model, self).__init__()
+    def __init__(self):
+        super(VGGStyle3DCNN, self).__init__()
         self.block1 = nn.Sequential(
             nn.Conv3d(3, 32, kernel_size=(3, 5, 5), stride=(1, 2, 2), dilation=(1, 1, 1), padding=(1, 2, 2)),
             nn.BatchNorm3d(32),
@@ -92,7 +92,7 @@ class Model(nn.Module):
 
 if __name__ == "__main__":
     num_classes = 157
-    input_tensor = torch.autograd.Variable(torch.rand(1, 3, 72, 224, 224))
-    model = Model(512).cuda()
-    output = model(input_tensor.cuda())
+    input_tensor = torch.autograd.Variable(torch.rand(1, 3, 16, 224, 224))
+    model = VGGStyle3DCNN()
+    output = model(input_tensor)
     print(output.size())

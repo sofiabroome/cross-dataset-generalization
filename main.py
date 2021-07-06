@@ -10,6 +10,7 @@ import utils
 import argparse
 from data_module import Diving48DataModule
 from lit_convlstm import ConvLSTMModule
+from lit_3dconv import ThreeDCNNModule
 
 
 def main():
@@ -35,16 +36,19 @@ def main():
     seed_everything(42, workers=True)
 
     if config['model_name'] == 'lit_convlstm':
-        conv_lstm = ConvLSTMModule(input_size=(config['batch_size'], config['clip_size'], 3,
-                                               config['input_spatial_size'], config['input_spatial_size']),
-                                   hidden_per_layer=config['hidden_per_layer'],
-                                   kernel_size_per_layer=config['kernel_size_per_layer'],
-                                   conv_stride=config['conv_stride'],
-                                   lr=config['lr'], momentum=config['momentum'],
-                                   weight_decay=config['weight_decay'], dropout=config['dropout'])
+        model = ConvLSTMModule(input_size=(config['batch_size'], config['clip_size'], 3,
+                               config['input_spatial_size'], config['input_spatial_size']),
+                               hidden_per_layer=config['hidden_per_layer'],
+                               kernel_size_per_layer=config['kernel_size_per_layer'],
+                               conv_stride=config['conv_stride'],
+                               lr=config['lr'], momentum=config['momentum'],
+                               weight_decay=config['weight_decay'], dropout=config['dropout'])
 
     if config['model_name'] == 'lit_3dconv':
-        pass
+        model = ThreeDCNNModule(input_size=(config['batch_size'], config['clip_size'], 3,
+                                config['input_spatial_size'], config['input_spatial_size']),
+                                lr=config['lr'], momentum=config['momentum'],
+                                weight_decay=config['weight_decay'], dropout=config['dropout'])
 
     checkpoint_callback = ModelCheckpoint(monitor='val_acc', mode='max',
                                           verbose=True,
@@ -69,12 +73,12 @@ def main():
     if trainer.gpus is not None:
         config['num_workers'] = int(trainer.gpus/8 * 128)
 
-    dm = Diving48DataModule(data_dir=config['data_folder'], config=config)
+    dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
 
-    trainer.fit(conv_lstm, dm)
+    trainer.fit(model, dm)
 
-    # trainer.test(conv_lstm, datamodule=dm)
-    # trainer.test(datamodule=dm, model=conv_lstm,
+    # trainer.test(model, datamodule=dm)
+    # trainer.test(datamodule=dm, model=model,
     #              ckpt_path=config['ckpt_path'])
 
 

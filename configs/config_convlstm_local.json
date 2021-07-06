@@ -38,6 +38,5 @@
     "weight_decay": 0.00001,
     "dropout": 0.5,
 
-
     "input_spatial_size": 224
 }

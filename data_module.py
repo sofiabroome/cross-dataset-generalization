@@ -8,7 +8,7 @@ from data_loader_av import VideoFolder
 
 
 class Diving48DataModule(pl.LightningDataModule):
-    def __init__(self, data_dir: str, config: dict):
+    def __init__(self, data_dir: str, config: dict, seq_first: bool):
         super().__init__()
         self.data_dir = data_dir
         self.dims = (3, 224, 224)
@@ -16,6 +16,7 @@ class Diving48DataModule(pl.LightningDataModule):
         self.upscale_size_train = 240
         self.upscale_size_eval = 224
         self.config = config
+        self.seq_first = seq_first
 
         self.transform_train_pre = ComposeMix([
             [RandomRotationVideo(15), "vid"],
@@ -54,7 +55,7 @@ class Diving48DataModule(pl.LightningDataModule):
                 augmentation_mappings_json=self.config['augmentation_mappings_json'],
                 augmentation_types_todo=self.config['augmentation_types_todo'],
                 get_item_id=True,
-                seq_first=True
+                seq_first=self.seq_first
                 )
             self.train_data, self.val_data = random_split(
                 train_val_data, [self.config['nb_train_samples'], self.config['nb_val_samples']],
@@ -74,7 +75,7 @@ class Diving48DataModule(pl.LightningDataModule):
                 transform_post=self.transform_post,
                 get_item_id=True,
                 is_test=True,
-                seq_first=True
+                seq_first=self.seq_first
                 )
 
     def train_dataloader(self) -> DataLoader:
