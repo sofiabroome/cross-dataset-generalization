@@ -1,7 +1,7 @@
 import os
 import pytorch_lightning as pl
 
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.plugins import DDPPlugin
 from pytorch_lightning import seed_everything
@@ -64,10 +64,12 @@ def main():
         mode='max'
     )
 
+    lr_monitor = LearningRateMonitor(logging_interval='epoch')
+
     trainer = pl.Trainer.from_argparse_args(
         args, max_epochs=config['num_epochs'],
         progress_bar_refresh_rate=1,
-        callbacks=[checkpoint_callback, early_stop_callback],
+        callbacks=[checkpoint_callback, early_stop_callback, lr_monitor],
         weights_save_path=os.path.join(config['output_dir'], args.job_identifier),
         logger=wandb_logger,
         plugins=DDPPlugin(find_unused_parameters=False))
