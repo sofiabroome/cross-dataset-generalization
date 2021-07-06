@@ -15,10 +15,9 @@
 
     "num_workers": 32,
 
-
     "num_classes": 48,
-    "batch_size": 5,
-    "clip_size": 6,
+    "batch_size": 16,
+    "clip_size": 16,
 
     "nclips_train_val": 1,
     "nclips_test": 1,
@@ -26,14 +25,15 @@
     "step_size_train_val": 1,
     "step_size_test": 1,
 
-    "lr": 0.01,
-    "last_lr": 0.00001,
+    "lr": 0.001,
+    "reduce_lr": 0,
+    "last_lr": 0.001,
     "momentum": 0.9,
-    "num_epochs": 1,
+    "num_epochs": 500,
 
-    "early_stopping_patience": 20,
+    "early_stopping_patience": 30,
     "weight_decay": 0.00001,
-    "dropout": 0.5,
+    "dropout": 0,
 
     "input_spatial_size": 224
 }
