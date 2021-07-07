@@ -7,14 +7,15 @@ import torch
 
 
 class ConvLSTMModule(pl.LightningModule):
-    def __init__(self, input_size, hidden_per_layer, kernel_size_per_layer, conv_stride,
-                 lr, reduce_lr, momentum, weight_decay, dropout):
+    def __init__(self, input_size, optimizer, hidden_per_layer,
+                 kernel_size_per_layer, conv_stride, lr, reduce_lr,
+                 momentum, weight_decay, dropout):
         super(ConvLSTMModule, self).__init__()
 
         self.b, self.t, self.c, self.h, self.w = input_size
         self.seq_first = True
         self.num_layers = len(hidden_per_layer)
-        self.optimizer = 'Adadelta'
+        self.optimizer = optimizer
         self.lr = lr
         self.reduce_lr = reduce_lr
         self.momentum = momentum
