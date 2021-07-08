@@ -66,12 +66,15 @@ def main():
         mode='max'
     )
 
-    lr_monitor = LearningRateMonitor(logging_interval='epoch')
+    callbacks = [checkpoint_callback, early_stop_callback]
+    
+    if config['reduce_lr']:
+        callbacks.append(LearningRateMonitor(logging_interval='epoch'))
 
     trainer = pl.Trainer.from_argparse_args(
         args, max_epochs=config['num_epochs'],
         progress_bar_refresh_rate=1,
-        callbacks=[checkpoint_callback, early_stop_callback, lr_monitor],
+        callbacks=callbacks,
         weights_save_path=os.path.join(config['output_dir'], args.job_identifier),
         logger=wandb_logger,
         plugins=DDPPlugin(find_unused_parameters=False))
@@ -80,7 +83,6 @@ def main():
         config['num_workers'] = int(trainer.gpus/8 * 128)
 
     dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
-
     trainer.fit(model, dm)
 
     # trainer.test(model, datamodule=dm)
