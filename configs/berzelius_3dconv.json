@@ -16,8 +16,8 @@
     "num_workers": 32,
 
     "num_classes": 48,
-    "batch_size": 16,
-    "clip_size": 16,
+    "batch_size": 128,
+    "clip_size": 24,
 
     "nclips_train_val": 1,
     "nclips_test": 1,

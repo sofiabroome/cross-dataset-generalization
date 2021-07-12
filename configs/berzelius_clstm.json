@@ -16,11 +16,11 @@
     "num_workers": 32,
 
     "num_classes": 48,
-    "batch_size": 16,
-    "clip_size": 16,
+    "batch_size": 32,
+    "clip_size": 32,
 
-    "hidden_per_layer": [32, 32, 32, 32, 32],
-    "kernel_size_per_layer": [5, 5, 5, 5, 5],
+    "hidden_per_layer": [32, 32, 64, 128, 256, 512],
+    "kernel_size_per_layer": [7, 5, 5, 5, 3, 3],
     "conv_stride": 1,
     
     "nclips_train_val": 1,
@@ -29,7 +29,7 @@
     "step_size_train_val": 10,
     "step_size_test": 10,
 
-    "optimizer": "Adadelta",
+    "optimizer": "SGD",
     "lr": 0.001,
     "reduce_lr": 0,
     "last_lr": 0.001,
@@ -38,7 +38,7 @@
 
     "early_stopping_patience": 30,
     "weight_decay": 0.00001,
-    "dropout": 0.5,
+    "dropout": 0.2,
 
-    "input_spatial_size": 224
+    "input_spatial_size": 112
 }

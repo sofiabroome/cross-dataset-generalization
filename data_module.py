@@ -11,10 +11,10 @@ class Diving48DataModule(pl.LightningDataModule):
     def __init__(self, data_dir: str, config: dict, seq_first: bool):
         super().__init__()
         self.data_dir = data_dir
-        self.dims = (3, 224, 224)
+        self.dims = (3, 112, 112)
         self.num_classes = 48
-        self.upscale_size_train = 240
-        self.upscale_size_eval = 224
+        self.upscale_size_train = 120
+        self.upscale_size_eval = 112
         self.config = config
         self.seq_first = seq_first
 
