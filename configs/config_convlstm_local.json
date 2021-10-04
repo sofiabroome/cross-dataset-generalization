@@ -1,4 +1,5 @@
 {
+    "inference_from_checkpoint_only": 0,
     "model_name": "lit_convlstm",
     "output_dir": "trained_models/",
     "checkpoint_path": "-1",
@@ -15,13 +16,15 @@
 
     "num_workers": 0,
 
-    "num_classes": 48,
+    "nb_labels": 48,
     "batch_size": 5,
     "clip_size": 6,
 
-    "hidden_per_layer": [32, 64, 128, 256, 512],
-    "kernel_size_per_layer": [5, 3, 3, 3, 3],
+    "hidden_per_layer": [2, 2, 2],
+    "kernel_size_per_layer": [5, 3, 3],
     "conv_stride": 1,
+    "return_sequence": 0,
+    "if_not_sequence": "last",
 
     "nclips_train_val": 1,
     "nclips_test": 1,
@@ -38,7 +41,9 @@
 
     "early_stopping_patience": 20,
     "weight_decay": 0.00001,
-    "dropout": 0.5,
+    "dropout_classifier": 0.5,
 
-    "input_spatial_size": 224
+    "input_spatial_size": 224,
+    "upscale_size_train": 120,
+    "upscale_size_eval": 112
 }

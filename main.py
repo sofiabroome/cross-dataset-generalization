@@ -11,6 +11,7 @@ import argparse
 from data_module import Diving48DataModule
 from lit_convlstm import ConvLSTMModule
 from lit_3dconv import ThreeDCNNModule
+from models.model_utils import count_parameters
 
 
 def main():
@@ -37,22 +38,35 @@ def main():
 
     if config['model_name'] == 'lit_convlstm':
         model = ConvLSTMModule(input_size=(config['batch_size'], config['clip_size'], 3,
-                               config['input_spatial_size'], config['input_spatial_size']),
+                                           config['input_spatial_size'], config['input_spatial_size']),
                                optimizer=config['optimizer'],
+                               nb_labels=config['nb_labels'],
                                hidden_per_layer=config['hidden_per_layer'],
                                kernel_size_per_layer=config['kernel_size_per_layer'],
                                conv_stride=config['conv_stride'],
                                lr=config['lr'], reduce_lr=config['reduce_lr'],
                                momentum=config['momentum'], weight_decay=config['weight_decay'],
-                               dropout=config['dropout'])
+                               dropout_classifier=config['dropout_classifier'],
+                               return_sequence=config['return_sequence'],
+                               if_not_sequence=config['if_not_sequence'])
+
 
     if config['model_name'] == 'lit_3dconv':
         model = ThreeDCNNModule(input_size=(config['batch_size'], config['clip_size'], 3,
-                                config['input_spatial_size'], config['input_spatial_size']),
+                                            config['input_spatial_size'], config['input_spatial_size']),
                                 optimizer=config['optimizer'],
+                                hidden_per_layer=config['hidden_per_layer'],
+                                kernel_size_per_layer=config['kernel_size_per_layer'],
+                                conv_stride=config['conv_stride'],
+                                dropout_encoder=config['dropout_encoder'],
+                                pooling=config['pooling'],
+                                nb_labels=config['nb_labels'],
                                 lr=config['lr'], reduce_lr=config['reduce_lr'],
                                 momentum=config['momentum'], weight_decay=config['weight_decay'],
-                                dropout=config['dropout'])
+                                dropout_classifier=config['dropout_classifier'])
+
+    config['nb_encoder_params'], config['nb_trainable_params'] = count_parameters(model)
+    print('\n Nb encoder params: ', config['nb_encoder_params'], 'Nb params total: ', config['nb_trainable_params'])
 
     checkpoint_callback = ModelCheckpoint(monitor='val_acc', mode='max',
                                           verbose=True,
@@ -81,13 +95,22 @@ def main():
 
     if trainer.gpus is not None:
         config['num_workers'] = int(trainer.gpus/8 * 128)
+    else:
+        config['num_workers'] = 0
 
-    dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
-    trainer.fit(model, dm)
+    # test_dm = Diving48DataModule(data_dir=config['test_data_folder'], config=config, seq_first=model.seq_first)
+    # test_dm_2 = Diving48DataModule(data_dir=config['test_data_folder_2'], config=config, seq_first=model.seq_first)
 
-    # trainer.test(model, datamodule=dm)
-    # trainer.test(datamodule=dm, model=model,
-    #              ckpt_path=config['ckpt_path'])
+    if config['inference_from_checkpoint_only']:
+        model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['ckpt_path'])
+        # trainer.test(datamodule=test_dm, model=model_from_checkpoint)
+
+    else:
+        train_dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
+        trainer.fit(model, train_dm)
+        wandb_logger.log_metrics({'best_val_acc': trainer.checkpoint_callback.best_model_score})
+        # trainer.test(datamodule=test_dm)
+        # trainer.test(datamodule=test_dm_2)
 
 
 if __name__ == '__main__':

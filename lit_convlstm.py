@@ -7,31 +7,44 @@ import torch
 
 
 class ConvLSTMModule(pl.LightningModule):
-    def __init__(self, input_size, optimizer, hidden_per_layer,
+    def __init__(self, input_size, optimizer, hidden_per_layer, nb_labels,
                  kernel_size_per_layer, conv_stride, lr, reduce_lr,
-                 momentum, weight_decay, dropout):
+                 momentum, weight_decay, dropout_classifier,
+                 return_sequence, if_not_sequence):
         super(ConvLSTMModule, self).__init__()
 
         self.b, self.t, self.c, self.h, self.w = input_size
+        self.h = 112
+        self.w = 112
         self.seq_first = True
         self.num_layers = len(hidden_per_layer)
+        self.out_features = nb_labels
         self.optimizer = optimizer
         self.lr = lr
         self.reduce_lr = reduce_lr
         self.momentum = momentum
         self.weight_decay = weight_decay
+        self.return_sequence = return_sequence
+        self.if_not_sequence = if_not_sequence
         self.convlstm_encoder = StackedConvLSTMModel(
-            self.c, hidden_per_layer, kernel_size_per_layer, conv_stride)
+            self.c, hidden_per_layer, kernel_size_per_layer, conv_stride,
+            return_sequence=self.return_sequence, if_not_sequence=self.if_not_sequence)
         self.flatten = nn.Flatten(start_dim=1, end_dim=-1)
-        self.dropout = nn.Dropout(p=dropout)
+        self.dropout = nn.Dropout(p=dropout_classifier)
+
+        self.sample_input = torch.autograd.Variable(torch.rand(1, self.t, self.c, self.h, self.w))
+        self.sample_output = self.convlstm_encoder(self.sample_input)
+        self.encoder_out_dim = torch.prod(torch.tensor(self.sample_output.shape[1:]))
+
         self.linear = nn.Linear(
-            in_features=self.t * hidden_per_layer[-1] *
-            int(self.h /(2**self.num_layers*conv_stride)) *
-            int(self.w/(2**self.num_layers*conv_stride)),
-            out_features=48)
+            in_features=self.encoder_out_dim,
+            out_features=self.out_features)
+
+        self.softmax = nn.Softmax(dim=1)
+
         self.accuracy = torchmetrics.Accuracy()
         self.top5_accuracy = torchmetrics.Accuracy(top_k=5)
-        self.softmax = nn.Softmax(dim=1)
+        self.confmat = torchmetrics.ConfusionMatrix(num_classes=nb_labels)
         self.save_hyperparameters()
 
     def forward(self, x) -> torch.Tensor:

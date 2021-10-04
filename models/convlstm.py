@@ -8,7 +8,8 @@ import pytorch_lightning as pl
 
 class StackedConvLSTMModel(nn.Module):
     def __init__(self, input_channels, hidden_per_layer, kernel_size_per_layer,
-                 conv_stride, return_all_layers=False, batch_first=True):
+                 conv_stride, return_sequence, if_not_sequence,
+                 return_all_layers=False, batch_first=True):
         super(StackedConvLSTMModel, self).__init__()
 
         self.hidden_per_layer = hidden_per_layer
@@ -16,6 +17,8 @@ class StackedConvLSTMModel(nn.Module):
         self.conv_stride = conv_stride
         self.num_layers = len(hidden_per_layer)
         self.return_all_layers = return_all_layers
+        self.return_sequence = return_sequence
+        self.if_not_sequence = if_not_sequence
         self.batch_first = batch_first
         self.blocks = []
 
@@ -51,19 +54,20 @@ class StackedConvLSTMModel(nn.Module):
         # Implement stateful ConvLSTM
         if initial_hidden_states is not None:
             raise NotImplementedError()
-        else:
-            # Since the init is done in forward. Can send image size here
-            initial_hidden_states = self._init_hidden(batch_size=b,
-                                                      image_size=(h, w))
 
         layer_output_list = []
 
         cur_layer_input = input_tensor
 
+        # print(cur_layer_input.size())
+
         for layer_idx in range(self.num_layers):
+            initial_hidden_states = self._init_hidden(
+                batch_size=b, cur_image_size=cur_layer_input.shape[-2:], layer_index=layer_idx)
             layer_output = self.conv_lstm_blocks[layer_idx](
                 cur_layer_input=cur_layer_input,
-                initial_hidden_states=initial_hidden_states[layer_idx])
+                initial_hidden_states=initial_hidden_states)
+            # print(layer_output.size())
 
             cur_layer_input = layer_output
             layer_output_list.append(layer_output)
@@ -71,16 +75,20 @@ class StackedConvLSTMModel(nn.Module):
         if not self.return_all_layers:
             layer_output_list = layer_output_list[-1]
 
+        if not self.return_sequence:
+            if self.if_not_sequence == 'middle_last':
+                middle_ind = int(seq_len/2)
+                middle = layer_output_list[:,middle_ind:middle_ind+1,:]
+                last = layer_output_list[:,-1:,:]
+                layer_output_list = torch.cat((middle, last), dim=1)
+            if self.if_not_sequence == 'two_last':
+                layer_output_list = layer_output_list[:,-2:,:]
+            if self.if_not_sequence == 'last':
+                layer_output_list = layer_output_list[:,-1:,:]
         return layer_output_list
 
-    def _init_hidden(self, batch_size, image_size):
-        init_states = []
-        for i in range(self.num_layers):
-            inv_scaling_factor = 2**i  # Down-sampling resulting from max-pooling
-            cur_image_size = (int(image_size[0]/inv_scaling_factor), int(image_size[1]/inv_scaling_factor))
-            if i != 0:
-                cur_image_size = (int(cur_image_size[0]/self.conv_stride), int(cur_image_size[1]/self.conv_stride))
-            init_states.append(self.conv_lstm_blocks[i].conv_lstm.init_hidden(batch_size, cur_image_size))
+    def _init_hidden(self, batch_size, cur_image_size, layer_index):
+        init_states = self.conv_lstm_blocks[layer_index].conv_lstm.init_hidden(batch_size, cur_image_size)
         return init_states
 
 
@@ -88,9 +96,10 @@ class ConvLSTMBlock(nn.Module):
 
     def __init__(self, input_dim, hidden_dim, kernel_size, stride, bias):
         super().__init__()
+        self.stride = stride
         self.conv_lstm = ConvLSTMCell(input_dim, hidden_dim=hidden_dim,
                                       kernel_size=[kernel_size, kernel_size],
-                                      stride=stride, bias=bias)
+                                      stride=self.stride, bias=bias)
         self.mp2d = nn.MaxPool2d(kernel_size=2, stride=2)
         self.bn = nn.BatchNorm3d(num_features=hidden_dim)
 
@@ -106,7 +115,7 @@ class ConvLSTMBlock(nn.Module):
             output_inner.append(h)
 
             layer_output = torch.stack(output_inner, dim=1)
-        _, _, _, height, width = cur_layer_input.size()  # h and w can change depending on stride
+        _, _, _, height, width = layer_output.size()  # h and w can change depending on stride
         x = layer_output.view(b * seq_len, out_channels, height, width)
         x = self.mp2d(x)
         x = x.view(b, seq_len, out_channels, int(height/2), int(width/2))
@@ -147,29 +156,39 @@ class ConvLSTMCell(nn.Module):
         self.stride = stride
         self.bias = bias
 
-        self.conv = nn.Conv2d(in_channels=self.input_dim + self.hidden_dim,
+        self.input_conv = nn.Conv2d(in_channels=self.input_dim,
                               out_channels=4 * self.hidden_dim,
                               kernel_size=self.kernel_size,
                               stride=self.stride,
                               padding=self.padding,
                               bias=self.bias)
 
+        self.recurrent_conv = nn.Conv2d(in_channels=self.hidden_dim,
+                              out_channels=4 * self.hidden_dim,
+                              kernel_size=self.kernel_size,
+                              stride=1,
+                              padding=self.padding,
+                              bias=self.bias)
+
     def forward(self, input_tensor, cur_state):
 
-        if self.stride > 1:  # TODO conv stride >1 requires separate input conv.
-            print('Conv strides >1 is not implemented yet.')
-            raise NotImplementedError()
         h_cur, c_cur = cur_state
 
-        combined = torch.cat([input_tensor, h_cur], dim=1)  # concatenate along channel axis
+        input_conv_output = self.input_conv(input_tensor) 
+        recurrent_conv_output = self.recurrent_conv(h_cur) 
 
-        combined_conv = self.conv(combined)
-        cc_i, cc_f, cc_o, cc_g = torch.split(combined_conv, self.hidden_dim, dim=1)
+        ic_i, ic_f, ic_o, ic_g = torch.split(input_conv_output, self.hidden_dim, dim=1)
+        rc_i, rc_f, rc_o, rc_g = torch.split(recurrent_conv_output, self.hidden_dim, dim=1)
+
+        cc_i = ic_i + rc_i
+        cc_f = ic_f + rc_f
+        cc_o = ic_o + rc_o
+        cc_g = ic_g + rc_g
+
         i = torch.sigmoid(cc_i)
         f = torch.sigmoid(cc_f)
         o = torch.sigmoid(cc_o)
         g = torch.tanh(cc_g)
-
         c_next = f * c_cur + i * g
         h_next = o * torch.tanh(c_next)
 
@@ -177,16 +196,24 @@ class ConvLSTMCell(nn.Module):
 
     def init_hidden(self, batch_size, image_size):
         height, width = image_size
-        h_init = torch.zeros(batch_size, self.hidden_dim, height, width)
+        h_init = torch.zeros(batch_size, self.hidden_dim, int(height/self.stride), int(width/self.stride))
         c_init = torch.zeros(batch_size, self.hidden_dim, int(height/self.stride), int(width/self.stride))
-        return h_init.type_as(self.conv.weight), c_init.type_as(self.conv.weight)
+        return h_init.type_as(self.recurrent_conv.weight), c_init.type_as(self.recurrent_conv.weight)
 
 
 if __name__ == '__main__':
 
-    conv_lstm_model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[3, 3, 3, 3],
-                                           kernel_size_per_layer=[5, 5, 5, 5],
-                                           conv_stride=1)
-    output_list = conv_lstm_model(torch.rand(1, 16, 3, 224, 224))
-    print(len(output_list))
-    print(output_list[0].size())
+    model = StackedConvLSTMModel(input_channels=1, hidden_per_layer=[3, 3, 3],
+                                 return_sequence=False, kernel_size_per_layer=[3, 3, 3],
+                                 conv_stride=1, if_not_sequence='two_last')
+    output_list = model(torch.rand(64, 20, 1, 64, 64))
+
+    print('\n Output size:')
+    print(output_list.size(), '\n')
+
+    pytorch_total_params = sum(p.numel() for p in model.parameters())
+    print('pytorch_total_params', pytorch_total_params)
+
+    pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print('pytorch_total_params, only trainable', pytorch_total_params)
+
