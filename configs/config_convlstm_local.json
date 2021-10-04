@@ -19,8 +19,8 @@
     "batch_size": 5,
     "clip_size": 6,
 
-    "hidden_per_layer": [32, 32, 32],
-    "kernel_size_per_layer": [5, 5, 5],
+    "hidden_per_layer": [32, 64, 128, 256, 512],
+    "kernel_size_per_layer": [5, 3, 3, 3, 3],
     "conv_stride": 1,
 
     "nclips_train_val": 1,
@@ -29,6 +29,7 @@
     "step_size_train_val": 1,
     "step_size_test": 1,
 
+    "optimizer": "SGD",
     "lr": 0.001,
     "reduce_lr": 0,
     "last_lr": 0.001,
