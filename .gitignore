@@ -121,3 +121,4 @@ run_scripts/
 xdataset_output/
 lightning_logs/
 data/
+results/
