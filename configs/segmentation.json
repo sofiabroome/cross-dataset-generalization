@@ -1,0 +1,30 @@
+{
+    "deeplab_backbone": "deeplabv3_resnet50",
+    "output_dir": "results/",
+
+    "data_folder": "/Users/sbroome/Downloads/rgb/diving48_rgb_webm/",
+
+    "json_data_train": "/Users/sbroome/Downloads/Diving48_V2_train.json",
+    "json_data_val": "/Users/sbroome/Downloads/Diving48_V2_test.json",
+    "json_data_test": "/Users/sbroome/Downloads/Diving48_V2_test.json",
+
+    "json_file_labels": "/Users/sbroome/Downloads/Diving48_vocab.json",
+    "nb_train_samples": 13525,
+    "nb_val_samples": 1502,
+
+    "num_workers": 0,
+
+    "batch_size": 5,
+    "clip_size": 6,
+    "nb_labels": 48,
+
+    "nclips_train_val": 1,
+    "nclips_test": 1,
+
+    "step_size_train_val": 1,
+    "step_size_test": 1,
+
+    "input_spatial_size": 224,
+    "upscale_size_train": 120,
+    "upscale_size_eval": 112
+}
