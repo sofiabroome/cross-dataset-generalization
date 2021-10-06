@@ -2,9 +2,9 @@
     "deeplab_backbone": "deeplabv3_resnet50",
     "output_dir": "results/",
 
-    "data_folder": "/Users/sbroome/Downloads/rgb/diving48_rgb_webm/",
+    "data_folder": "data/small_diving48/",
 
-    "json_data_train": "/Users/sbroome/Downloads/Diving48_V2_train.json",
+    "json_data_train": "data/small_diving48/smalldiving.json",
     "json_data_val": "/Users/sbroome/Downloads/Diving48_V2_test.json",
     "json_data_test": "/Users/sbroome/Downloads/Diving48_V2_test.json",
 
@@ -14,8 +14,8 @@
 
     "num_workers": 0,
 
-    "batch_size": 5,
-    "clip_size": 6,
+    "batch_size": 3,
+    "clip_size": 30,
     "nb_labels": 48,
 
     "nclips_train_val": 1,

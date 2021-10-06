@@ -13,7 +13,7 @@ from utils import save_images_for_debug
 class VideoFramesForSegmentation(torch.utils.data.Dataset):
 
     def __init__(self, root, json_file_input, json_file_labels, clip_size,
-                 nclips, step_size, is_val, get_item_id=False, is_test=False):
+                 nclips, step_size, is_val=False, get_item_id=False, is_test=False):
         self.dataset_object = WebmDataset(json_file_input, json_file_labels,
                                           root, is_test=is_test)
         self.json_data = self.dataset_object.json_data
@@ -29,7 +29,6 @@ class VideoFramesForSegmentation(torch.utils.data.Dataset):
     def __getitem__(self, index):
 
         item = self.json_data[index]
-        label = item.label
 
         # Open video file
         reader = av.open(item.path)  # Takes around 0.005 seconds.
@@ -48,11 +47,6 @@ class VideoFramesForSegmentation(torch.utils.data.Dataset):
         num_frames = len(imgs)
 
         imgs = [preprocess(img) for img in imgs]
-
-        if 'something' in self.root:
-            target_idx = self.classes_dict[label]
-        else:
-            target_idx = label
 
         if self.nclips > -1:
             num_frames_necessary = self.clip_size * self.nclips * self.step_size
@@ -76,9 +70,9 @@ class VideoFramesForSegmentation(torch.utils.data.Dataset):
         # format data to torch
         data = torch.stack(imgs)
         if self.get_item_id:
-            return (data, target_idx, item.id)
+            return data, item.id
         else:
-            return (data, target_idx)
+            return data
 
     def __len__(self):
         return len(self.json_data)
