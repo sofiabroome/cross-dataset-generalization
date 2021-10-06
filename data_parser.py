@@ -30,9 +30,10 @@ class DatasetBase(object):
             video_id_key = 'id'
         else:
             video_id_key = 'vid_name'
-        if not self.is_test:
-            with open(self.json_path_input, 'rb') as jsonfile:
-                json_reader = json.load(jsonfile)
+
+        with open(self.json_path_input, 'rb') as jsonfile:
+            json_reader = json.load(jsonfile)
+            if not self.is_test:
                 for elem in json_reader:
                     if 'something' in self.data_root:
                         label = self.clean_template(elem['template'])
@@ -46,9 +47,7 @@ class DatasetBase(object):
                                                  elem[video_id_key] + self.extension)
                                     )
                     json_data.append(item)
-        else:
-            with open(self.json_path_input, 'rb') as jsonfile:
-                json_reader = json.load(jsonfile)
+            else:
                 for elem in json_reader:
                     # add a dummy label for all test samples in smth-smth
                     if 'something' in self.data_root:
