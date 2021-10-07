@@ -1,20 +1,19 @@
 from frames_for_segmentation_dataset import VideoFramesForSegmentation
-from segmentation_test_script import plot_with_mask
+from torchvision.utils import draw_segmentation_masks
 import torchvision.transforms.functional as F
+from matplotlib import pyplot as plt
 from torchvision import transforms
 from tqdm import tqdm
+import numpy as np
 import argparse
 import torch
 import utils
+import os
 
 
 def plot_with_mask(input_tensor, all_masks, class_index,
                    video_id, seq_ind, save_folder='results'):
     mask = (all_masks == class_index)
-    # input_tensor = torch.reshape(input_tensor, (h, w, c)).type(torch.uint8)
-    # input_tensor = input_tensor.type(torch.uint8)
-    # convert_tensor = transforms.ToTensor()
-    # input_tensor = convert_tensor(input_image)
     inv_normalize = transforms.Normalize(
         mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.255],
         std=[1 / 0.229, 1 / 0.224, 1 / 0.255]
@@ -22,7 +21,6 @@ def plot_with_mask(input_tensor, all_masks, class_index,
     input_tensor = inv_normalize(input_tensor)
     input_tensor = (input_tensor * 255).type(torch.uint8)
     img = draw_segmentation_masks(input_tensor, masks=mask, alpha=0.7)
-    # image_with_mask = torch.reshape(image_with_mask, (h, w, c))
     img = img.detach()
     img = F.to_pil_image(img)
     video_save_folder = os.path.join(save_folder, video_id)
@@ -43,6 +41,7 @@ def main():
 
     model = torch.hub.load('pytorch/vision:v0.10.0', config['deeplab_backbone'], pretrained=True)
     model.eval()
+
     if torch.cuda.is_available():
         model.to('cuda')
 
