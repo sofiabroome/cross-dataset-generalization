@@ -5,7 +5,6 @@ from PIL import Image
 import numpy as np
 import urllib
 import torch
-import os
 
 from torchvision.utils import draw_segmentation_masks
 
@@ -23,6 +22,20 @@ def plot_with_mask(input_image, all_masks, class_index, save_folder='results'):
     plt.imshow(np.asarray(img))
     plt.savefig(fname=f'{save_folder}/mask_class{class_index}.jpg')
     plt.clf()
+
+
+def plot_only_segmentation_mask(all_masks):
+    # create a color palette, selecting a color for each class
+    palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
+    colors = torch.as_tensor([i for i in range(21)])[:, None] * palette
+    colors = (colors % 255).numpy().astype("uint8")
+    r = Image.fromarray(all_masks.byte().cpu().numpy()).resize(all_masks.size)
+    # plot the semantic segmentation predictions of 21 classes in each color
+    r.putpalette(colors)
+    plt.imshow(r)
+    plt.savefig(fname='results/testseg.jpg')
+    plt.clf()
+
 
 def main():
     model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', pretrained=True)
@@ -62,21 +75,10 @@ def main():
     # ipdb> testoutput['out'].shape
     # torch.Size([1, 21, 1026, 1282])
 
-    # create a color pallette, selecting a color for each class
-    palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
-    colors = torch.as_tensor([i for i in range(21)])[:, None] * palette
-    colors = (colors % 255).numpy().astype("uint8")
+    # List of classes:
+    # https://github.com/NVIDIA/DIGITS/blob/master/examples/semantic-segmentation/pascal-voc-classes.txt
 
-    # List of classes: https://github.com/NVIDIA/DIGITS/blob/master/examples/semantic-segmentation/pascal-voc-classes.txt
-
-    # plot the semantic segmentation predictions of 21 classes in each color
-    r = Image.fromarray(output_predictions.byte().cpu().numpy()).resize(input_image.size)
-    r.putpalette(colors)
-
-    plt.imshow(r)
-    plt.savefig(fname='results/testseg.jpg')
-    plt.clf()
-
+    plot_only_segmentation_mask(output_predictions)
     plot_with_mask(input_image, output_predictions, 15)
     plot_with_mask(input_image, output_predictions, 17)
 
