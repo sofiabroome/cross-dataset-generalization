@@ -9,6 +9,7 @@ import argparse
 import torch
 import utils
 import os
+import av
 
 
 def plot_with_mask(input_tensor, all_masks, class_index,
@@ -21,15 +22,16 @@ def plot_with_mask(input_tensor, all_masks, class_index,
     )
     input_tensor = inv_normalize(input_tensor)
     input_tensor = (input_tensor * 255).type(torch.uint8)
-    img = draw_segmentation_masks(input_tensor, masks=mask, alpha=0.7)
-    img = img.detach()
-    img = F.to_pil_image(img)
+    img_tensor = draw_segmentation_masks(input_tensor, masks=mask, alpha=1)
+    img_array = img_tensor.detach()
+    img = F.to_pil_image(img_array)
     video_save_folder = os.path.join(save_folder, video_id)
     if not os.path.isdir(video_save_folder):
         os.mkdir(video_save_folder)
     plt.imshow(np.asarray(img))
     plt.savefig(fname=f'{save_folder}/{video_id}/mask_{seq_ind}_class{class_index}.jpg')
     plt.clf()
+    return img
 
 
 def main():
@@ -71,20 +73,41 @@ def main():
             output = model(x)['out']
         masks_batch = output.argmax(dim=1)
         batch_ind = 0
+        fps = 25
+        container = av.open('results/' + video_id_batch[batch_ind] + '_cropped.mp4', mode='w')
+        stream = container.add_stream('mpeg4', rate=fps)
+        stream.width = 224
+        stream.height = 224
+        stream.pix_fmt = 'yuv420p'
         for sample_ind in range(num_images):
             seq_ind = sample_ind%config['clip_size']
             if seq_ind == 0 and sample_ind != 0:
+                for packet in stream.encode():
+                    container.mux(packet)
+                container.close()
                 batch_ind += 1
+                container = av.open('results/' + video_id_batch[batch_ind] + '_cropped.mp4', mode='w')
+                stream = container.add_stream('mpeg4', rate=fps)
+                stream.width = 224
+                stream.height = 224
+                stream.pix_fmt = 'yuv420p'
             video_id = video_id_batch[batch_ind]
             image_tensor = x[sample_ind]
             mask = masks_batch[sample_ind]
             print('vid id: ', video_id)
             print('sample ind: ', sample_ind)
-            plot_with_mask(input_tensor=image_tensor, all_masks=mask, class_index=15,
-                           video_id=video_id,
-                           seq_ind=seq_ind)
+            masked = plot_with_mask(
+                input_tensor=image_tensor, all_masks=mask,
+                class_index=15, video_id=video_id,
+                seq_ind=seq_ind)
+            frame = av.VideoFrame.from_image(masked)
+            for packet in stream.encode(frame):
+                container.mux(packet)
         if i > 10:
             break
+    for packet in stream.encode():
+        container.mux(packet)
+    container.close()
 
 
 if __name__ == '__main__':

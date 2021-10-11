@@ -3,7 +3,7 @@ import time
 import torch
 import numpy as np
 
-from data_parser import WebmDataset
+from data_parser import WebmDataset, Mp4Dataset
 from data_augmentor import Augmentor
 import torchvision
 from torchvision import transforms
@@ -16,6 +16,8 @@ class VideoFramesForSegmentation(torch.utils.data.Dataset):
                  nclips, step_size, is_val=False, get_item_id=False, is_test=False):
         self.dataset_object = WebmDataset(json_file_input, json_file_labels,
                                           root, is_test=is_test)
+        # self.dataset_object = Mp4Dataset(json_file_input, json_file_labels,
+        #                                  root, is_test=is_test)
         self.json_data = self.dataset_object.json_data
         self.classes = self.dataset_object.classes
         self.classes_dict = self.dataset_object.classes_dict
@@ -45,7 +47,6 @@ class VideoFramesForSegmentation(torch.utils.data.Dataset):
         ])
 
         num_frames = len(imgs)
-
         imgs = [preprocess(img) for img in imgs]
 
         if self.nclips > -1:
