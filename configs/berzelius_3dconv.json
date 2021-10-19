@@ -19,6 +19,7 @@
     "batch_size": 128,
     "clip_size": 24,
 
+    "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,
     "nclips_test": 1,
 

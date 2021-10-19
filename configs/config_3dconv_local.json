@@ -26,6 +26,7 @@
     "conv_stride": 1,
     "pooling": ["max", "max", "max", "max", "max"],
 
+    "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,
     "nclips_test": 1,
 

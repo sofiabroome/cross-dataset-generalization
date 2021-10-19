@@ -16,7 +16,8 @@ FRAMERATE = 1  # default value
 class VideoFolder(torch.utils.data.Dataset):
 
     def __init__(self, root, json_file_input, json_file_labels, clip_size,
-                 nclips, step_size, is_val, transform_pre=None, transform_post=None,
+                 nclips, step_size, is_val, frame_sample_mode,
+                 transform_pre=None, transform_post=None,
                  augmentation_mappings_json=None, augmentation_types_todo=None,
                  get_item_id=False, is_test=False, seq_first=False):
         self.dataset_object = WebmDataset(json_file_input, json_file_labels,
@@ -25,6 +26,7 @@ class VideoFolder(torch.utils.data.Dataset):
         self.classes = self.dataset_object.classes
         self.classes_dict = self.dataset_object.classes_dict
         self.root = root
+        self.frame_sample_mode = frame_sample_mode
         self.transform_pre = transform_pre
         self.transform_post = transform_post
 
@@ -39,9 +41,6 @@ class VideoFolder(torch.utils.data.Dataset):
         self.seq_first = seq_first
 
     def __getitem__(self, index):
-        """
-        [!] FPS jittering doesn't work with AV dataloader as of now
-        """
 
         item = self.json_data[index]
 
@@ -50,10 +49,16 @@ class VideoFolder(torch.utils.data.Dataset):
 
         try:
             imgs = []
-            imgs = [f.to_rgb().to_ndarray() for f in reader.decode(video=0)] # 0.5 s.
+            imgs = [f.to_rgb().to_ndarray() for f in reader.decode(video=0)]  # 0.5 s.
         except (RuntimeError, ZeroDivisionError) as exception:
             print('{}: WEBM reader cannot open {}. Empty '
                   'list returned.'.format(type(exception).__name__, item.path))
+
+        if self.frame_sample_mode == 'evenly_distributed':
+            evenly_spaced_frame_indices = np.round(
+                np.linspace(0, len(imgs) - 1, self.clip_size)
+            ).astype(int)
+            imgs = [imgs[ind] for ind in evenly_spaced_frame_indices]
 
         imgs = self.transform_pre(imgs)
         imgs, label = self.augmentor(imgs, item.label)
@@ -61,37 +66,38 @@ class VideoFolder(torch.utils.data.Dataset):
 
         num_frames = len(imgs)
 
+        if self.frame_sample_mode == 'augmented':
+            if self.nclips > -1:
+                num_frames_necessary = self.clip_size * self.nclips * self.step_size
+            else:
+                num_frames_necessary = num_frames
+            offset = 0
+            if num_frames_necessary < num_frames:
+                # If there are more frames, then sample starting offset.
+                diff = (num_frames - num_frames_necessary)
+                # temporal augmentation
+                if not self.is_val:
+                    offset = np.random.randint(0, diff)
+
+            if len(imgs) < (self.clip_size * self.nclips):
+                imgs.extend([imgs[-1]] *
+                            ((self.clip_size * self.nclips) - len(imgs)))
+
+            imgs = imgs[offset: num_frames_necessary + offset: self.step_size]
+
         if 'something' in self.root:
             target_idx = self.classes_dict[label]
         else:
             target_idx = label
-
-        if self.nclips > -1:
-            num_frames_necessary = self.clip_size * self.nclips * self.step_size
-        else:
-            num_frames_necessary = num_frames
-        offset = 0
-        if num_frames_necessary < num_frames:
-            # If there are more frames, then sample starting offset.
-            diff = (num_frames - num_frames_necessary)
-            # temporal augmentation
-            if not self.is_val:
-                offset = np.random.randint(0, diff)
-
-        imgs = imgs[offset: num_frames_necessary + offset: self.step_size]
-
-        if len(imgs) < (self.clip_size * self.nclips):
-            imgs.extend([imgs[-1]] *
-                        ((self.clip_size * self.nclips) - len(imgs)))
 
         # format data to torch
         data = torch.stack(imgs)
         if not self.seq_first:
             data = data.permute(1, 0, 2, 3)
         if self.get_item_id:
-            return (data, target_idx, item.id)
+            return data, target_idx, item.id
         else:
-            return (data, target_idx)
+            return data, target_idx
 
     def __len__(self):
         return len(self.json_data)
@@ -121,6 +127,7 @@ if __name__ == '__main__':
                          nclips=1,
                          step_size=1,
                          is_val=False,
+                         frame_sample_mode='evenly_distributed',
                          transform_pre=transform_pre,
                          transform_post=transform_post,
                          # augmentation_mappings_json="notebooks/augmentation_mappings.json",

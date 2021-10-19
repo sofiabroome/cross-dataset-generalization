@@ -22,7 +22,8 @@
     "hidden_per_layer": [32, 32, 64, 128, 256, 512],
     "kernel_size_per_layer": [7, 5, 5, 5, 3, 3],
     "conv_stride": 1,
-    
+
+    "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,
     "nclips_test": 1,
 
