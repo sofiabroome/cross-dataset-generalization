@@ -2,11 +2,9 @@ import os
 import sys
 import json
 import pickle
-import argparse
 import torch
 import shutil
 import glob
-import numpy as np
 
 
 def count_parameters(model):
