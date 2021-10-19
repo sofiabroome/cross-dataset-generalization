@@ -4,7 +4,7 @@
     "output_dir": "trained_models/",
     "checkpoint_path": "-1",
 
-    "data_folder": "/Users/sbroome/Downloads/rgb/diving48_rgb_webm/",
+    "data_folder": "/Users/sbroome/Downloads/diving48/diving48_rgb_webm/",
 
     "json_data_train": "/Users/sbroome/Downloads/Diving48_V2_train.json",
     "json_data_val": "/Users/sbroome/Downloads/Diving48_V2_test.json",
