@@ -13,8 +13,6 @@ class ThreeDCNNModule(ConvLSTMModule):
         super(ConvLSTMModule, self).__init__()
 
         self.b, self.t, self.c, self.h, self.w = input_size
-        self.h = 112
-        self.w = 112
         self.seq_first = False
         self.out_features = nb_labels
         self.optimizer = optimizer

@@ -12,7 +12,7 @@ class Diving48DataModule(pl.LightningDataModule):
         super().__init__()
         self.data_dir = data_dir
         self.dims = (3, config['input_spatial_size'], config['input_spatial_size'])
-        self.dims = (3, 112, 112)
+        self.dims = (3, 224, 224)
         self.num_classes = 48
         self.upscale_size_train = config['upscale_size_train']
         self.upscale_size_eval = config['upscale_size_eval']
@@ -20,16 +20,16 @@ class Diving48DataModule(pl.LightningDataModule):
         self.seq_first = seq_first
 
         self.transform_train_pre = ComposeMix([
-            [RandomRotationVideo(15), "vid"],
-            [Scale(self.upscale_size_train), "img"],
-            [RandomCropVideo(self.dims[1]), "vid"],
+            # [RandomRotationVideo(15), "vid"],
+            # [Scale(self.upscale_size_train), "img"],
+            # [RandomCropVideo(self.dims[1]), "vid"],
         ])
 
         # Center crop videos during evaluation
         self.transform_eval_pre = ComposeMix([
-            [Scale(self.upscale_size_eval), "img"],
-            [torchvision.transforms.ToPILImage(), "img"],
-            [torchvision.transforms.CenterCrop(self.dims[1]), "img"],
+           #  [Scale(self.upscale_size_eval), "img"],
+           #  [torchvision.transforms.ToPILImage(), "img"],
+           #  [torchvision.transforms.CenterCrop(self.dims[1]), "img"],
         ])
 
         # Transforms common to train and eval sets and applied after "pre" transforms

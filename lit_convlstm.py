@@ -14,8 +14,6 @@ class ConvLSTMModule(pl.LightningModule):
         super(ConvLSTMModule, self).__init__()
 
         self.b, self.t, self.c, self.h, self.w = input_size
-        self.h = 112
-        self.w = 112
         self.seq_first = True
         self.num_layers = len(hidden_per_layer)
         self.out_features = nb_labels
