@@ -1,10 +1,14 @@
 {
     "inference_from_checkpoint_only": 0,
     "model_name": "lit_3dconv",
-    "output_dir": "/proj/berzelius_pilot/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
+    "output_dir": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
     "checkpoint_path": "-1",
 
     "data_folder": "/proj/berzelius_pilot/users/x_sofbr/diving48/diving48_rgb_webm/",
+    "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_cropped_divers/",
+    "texture_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_masked_divers_all_masks/",
+    "training_extension": ".webm",
+    "test_extension": "_cropped.mp4",
 
     "json_data_train": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_V2_train.json",
     "json_data_val": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_V2_test.json",
