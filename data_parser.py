@@ -102,6 +102,14 @@ class Mp4Dataset(DatasetBase):
                          EXTENSION, is_test)
 
 
+class CroppedMp4Dataset(DatasetBase):
+    def __init__(self, json_path_input, json_path_labels, data_root,
+                 is_test=False):
+        EXTENSION = "_cropped.mp4"
+        super().__init__(json_path_input, json_path_labels, data_root,
+                         EXTENSION, is_test)
+
+
 class I3DFeatures(DatasetBase):
     def __init__(self, json_path_input, json_path_labels, data_root,
                  is_test=False):

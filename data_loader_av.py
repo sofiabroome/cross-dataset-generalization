@@ -3,7 +3,7 @@ import time
 import torch
 import numpy as np
 
-from data_parser import WebmDataset
+from data_parser import WebmDataset, CroppedMp4Dataset
 from data_augmentor import Augmentor
 import torchvision
 from transforms_video import *
@@ -19,9 +19,15 @@ class VideoFolder(torch.utils.data.Dataset):
                  nclips, step_size, is_val, frame_sample_mode,
                  transform_pre=None, transform_post=None,
                  augmentation_mappings_json=None, augmentation_types_todo=None,
-                 get_item_id=False, is_test=False, seq_first=False):
-        self.dataset_object = WebmDataset(json_file_input, json_file_labels,
-                                          root, is_test=is_test)
+                 get_item_id=False, is_test=False, seq_first=False,
+                 extension='.mp4'):
+        if extension == '.webm':
+            self.dataset_object = WebmDataset(json_file_input, json_file_labels,
+                                              root, is_test=is_test)
+        if extension == '_cropped.mp4':
+            self.dataset_object = CroppedMp4Dataset(
+                json_file_input, json_file_labels, root, is_test=is_test)
+
         self.json_data = self.dataset_object.json_data
         self.classes = self.dataset_object.classes
         self.classes_dict = self.dataset_object.classes_dict

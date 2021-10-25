@@ -5,6 +5,10 @@
     "checkpoint_path": "-1",
 
     "data_folder": "/Users/sbroome/Downloads/diving48/diving48_rgb_webm/",
+    "shape_data_folder": "/Users/sbroome/Documents/projects/cross-dataset-generalization/data/diving48_testset_cropped_divers/",
+    "texture_data_folder": "/Users/sbroome/Documents/projects/diver-segmentation/data/diving48_testset_masked_divers_all_masks/",
+    "training_extension": ".webm",
+    "test_extension": "_cropped.mp4",
 
     "json_data_train": "/Users/sbroome/Downloads/Diving48_V2_train.json",
     "json_data_val": "/Users/sbroome/Downloads/Diving48_V2_test.json",
@@ -21,10 +25,10 @@
     "clip_size": 6,
     "nb_labels": 48,
 
-    "hidden_per_layer": [48, 48, 48, 12, 12],
-    "kernel_size_per_layer": [3, 3, 3, 3, 3],
+    "hidden_per_layer": [1, 1],
+    "kernel_size_per_layer": [3, 3],
     "conv_stride": 1,
-    "pooling": ["max", "max", "max", "max", "max"],
+    "pooling": ["max", "max"],
 
     "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,

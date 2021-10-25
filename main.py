@@ -102,8 +102,8 @@ def main():
     else:
         config['num_workers'] = 0
 
-    test_dm = Diving48DataModule(data_dir=config['test_data_folder'], config=config, seq_first=model.seq_first)
-    test_dm_2 = Diving48DataModule(data_dir=config['test_data_folder_2'], config=config, seq_first=model.seq_first)
+    shape_test_dm = Diving48DataModule(data_dir=config['shape_data_folder'], config=config, seq_first=model.seq_first)
+    texture_test_dm = Diving48DataModule(data_dir=config['texture_data_folder'], config=config, seq_first=model.seq_first)
 
     if config['inference_from_checkpoint_only']:
         model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['ckpt_path'])
@@ -113,8 +113,8 @@ def main():
         train_dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
         trainer.fit(model, train_dm)
         wandb_logger.log_metrics({'best_val_acc': trainer.checkpoint_callback.best_model_score})
-        trainer.test(datamodule=test_dm)
-        trainer.test(datamodule=test_dm_2)
+        trainer.test(datamodule=shape_test_dm)
+        trainer.test(datamodule=texture_test_dm)
 
 
 if __name__ == '__main__':

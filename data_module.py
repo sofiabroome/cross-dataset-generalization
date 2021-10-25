@@ -35,6 +35,7 @@ class Diving48DataModule(pl.LightningDataModule):
         # Transforms common to train and eval sets and applied after "pre" transforms
         self.transform_post = ComposeMix([
             [torchvision.transforms.ToTensor(), "img"],
+            [torchvision.transforms.Resize((self.dims[1], self.dims[2])), "img"],
             [torchvision.transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],  # default values for imagenet
                 std=[0.229, 0.224, 0.225]), "img"]
@@ -57,7 +58,8 @@ class Diving48DataModule(pl.LightningDataModule):
                 augmentation_mappings_json=self.config['augmentation_mappings_json'],
                 augmentation_types_todo=self.config['augmentation_types_todo'],
                 get_item_id=True,
-                seq_first=self.seq_first
+                seq_first=self.seq_first,
+                extension=self.config['training_extension']
                 )
             self.train_data, self.val_data = random_split(
                 train_val_data, [self.config['nb_train_samples'], self.config['nb_val_samples']],
@@ -78,7 +80,8 @@ class Diving48DataModule(pl.LightningDataModule):
                 transform_post=self.transform_post,
                 get_item_id=True,
                 is_test=True,
-                seq_first=self.seq_first
+                seq_first=self.seq_first,
+                extension=self.config['test_extension']
                 )
 
     def train_dataloader(self) -> DataLoader:
