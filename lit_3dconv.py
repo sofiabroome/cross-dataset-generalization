@@ -53,6 +53,10 @@ class ThreeDCNNModule(ConvLSTMModule):
         return x
 
     def configure_optimizers(self):
+        if self.optimizer == 'SGD':
+            optimizer = torch.optim.SGD(
+                self.parameters(), self.lr, momentum=self.momentum,
+                weight_decay=self.weight_decay)
         if self.optimizer == 'Adam':
             optimizer = torch.optim.Adam(
                 self.parameters(), lr=self.lr, weight_decay=self.weight_decay)

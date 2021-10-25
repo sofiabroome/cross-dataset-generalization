@@ -68,9 +68,13 @@ def main():
     config['nb_encoder_params'], config['nb_trainable_params'] = count_parameters(model)
     print('\n Nb encoder params: ', config['nb_encoder_params'], 'Nb params total: ', config['nb_trainable_params'])
 
-    checkpoint_callback = ModelCheckpoint(monitor='val_acc', mode='max',
-                                          verbose=True,
-                                          filename='{epoch}-{val_loss:.2f}-{val_acc:.4f}')
+    checkpoint_callback = ModelCheckpoint(verbose=True,
+                                          filename='{epoch}-{val_loss:.2f}-{val_acc:.4f}',
+                                          every_n_epochs=1,
+                                          save_top_k=-1)
+    # checkpoint_callback = ModelCheckpoint(monitor='val_acc', mode='max',
+    #                                       verbose=True,
+    #                                       filename='{epoch}-{val_loss:.2f}-{val_acc:.4f}')
 
     early_stop_callback = EarlyStopping(
         monitor='val_acc',
@@ -98,8 +102,8 @@ def main():
     else:
         config['num_workers'] = 0
 
-    # test_dm = Diving48DataModule(data_dir=config['test_data_folder'], config=config, seq_first=model.seq_first)
-    # test_dm_2 = Diving48DataModule(data_dir=config['test_data_folder_2'], config=config, seq_first=model.seq_first)
+    test_dm = Diving48DataModule(data_dir=config['test_data_folder'], config=config, seq_first=model.seq_first)
+    test_dm_2 = Diving48DataModule(data_dir=config['test_data_folder_2'], config=config, seq_first=model.seq_first)
 
     if config['inference_from_checkpoint_only']:
         model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['ckpt_path'])
@@ -109,8 +113,8 @@ def main():
         train_dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
         trainer.fit(model, train_dm)
         wandb_logger.log_metrics({'best_val_acc': trainer.checkpoint_callback.best_model_score})
-        # trainer.test(datamodule=test_dm)
-        # trainer.test(datamodule=test_dm_2)
+        trainer.test(datamodule=test_dm)
+        trainer.test(datamodule=test_dm_2)
 
 
 if __name__ == '__main__':
