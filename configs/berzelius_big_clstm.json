@@ -22,12 +22,12 @@
 
     "num_classes": 48,
     "nb_labels": 48,
-    "batch_size": 4,
+    "batch_size": 8,
     "clip_size": 32,
 
-    "hidden_per_layer": [16, 16, 32, 64, 128, 512, 512],
-    "kernel_size_per_layer": [7, 5, 5, 5, 5, 5, 3],
-    "conv_stride": 1,
+    "hidden_per_layer": [64, 64, 128, 128],
+    "kernel_size_per_layer": [7, 7, 5, 5],
+    "conv_stride": 2,
     "return_sequence": 1,
     "if_not_sequence": "last",
 
@@ -47,7 +47,7 @@
 
     "early_stopping_patience": 30,
     "weight_decay": 0.00001,
-    "dropout_classifier": 0.2,
+    "dropout_classifier": 0,
 
     "input_spatial_size": 224,
     "upscale_size_train": 224,
