@@ -3,7 +3,7 @@ import torchvision
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader, random_split
 
-from transforms_video import ComposeMix, RandomRotationVideo, Scale, RandomCropVideo
+from transforms_video import ComposeMix, RandomRotationVideo, Scale, RandomCropVideo, RandomHorizontalFlipVideo
 from data_loader_av import VideoFolder
 
 
@@ -20,6 +20,7 @@ class Diving48DataModule(pl.LightningDataModule):
         self.seq_first = seq_first
 
         self.transform_train_pre = ComposeMix([
+            [RandomHorizontalFlipVideo(p=0.5), "vid"]
             # [RandomRotationVideo(15), "vid"],
             # [Scale(self.upscale_size_train), "img"],
             # [RandomCropVideo(self.dims[1]), "vid"],
