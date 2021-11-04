@@ -10,6 +10,7 @@ import utils
 import argparse
 from data_module import Diving48DataModule
 from lit_convlstm import ConvLSTMModule
+from old_lit_convlstm import OldConvLSTMModule
 from lit_3dconv import ThreeDCNNModule
 from models.model_utils import count_parameters
 
@@ -106,8 +107,13 @@ def main():
     texture_test_dm = Diving48DataModule(data_dir=config['texture_data_folder'], config=config, seq_first=model.seq_first)
 
     if config['inference_from_checkpoint_only']:
-        model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['ckpt_path'])
-        # trainer.test(datamodule=test_dm, model=model_from_checkpoint)
+        if config['model_name'] == 'lit_convlstm':
+            # model_from_checkpoint = OldConvLSTMModule.load_from_checkpoint(config['checkpoint_path'])
+            model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['checkpoint_path'])
+        if config['model_name'] == 'lit_3dconv':
+            model_from_checkpoint = ThreeDCNNModule.load_from_checkpoint(config['checkpoint_path'])
+        trainer.test(datamodule=shape_test_dm, model=model_from_checkpoint)
+        trainer.test(datamodule=texture_test_dm, model=model_from_checkpoint)
 
     else:
         train_dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
