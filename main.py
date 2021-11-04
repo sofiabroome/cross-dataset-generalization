@@ -11,6 +11,7 @@ import argparse
 from data_module import Diving48DataModule
 from lit_convlstm import ConvLSTMModule
 from lit_3dconv import ThreeDCNNModule
+from lit_timesformer import TimeSformerModule
 from models.model_utils import count_parameters
 
 
@@ -65,6 +66,21 @@ def main():
                                 momentum=config['momentum'], weight_decay=config['weight_decay'],
                                 dropout_classifier=config['dropout_classifier'])
 
+    if config['model_name'] == 'lit_transformer':
+        model = TimeSformerModule(input_size=(config['batch_size'], config['clip_size'], 3,
+                                config['input_spatial_size'], config['input_spatial_size']),
+                                optimizer=config['optimizer'],
+                                nb_labels=config['nb_labels'],
+                                lr=config['lr'], reduce_lr=config['reduce_lr'],
+
+                                dim=config['dim'], patch_size=config['patch_size'], num_frames=config['input_spatial_size'],
+                                attn_dropout=config['attn_dropout'], ff_dropout=config['ff_dropout'], depth=config['depth'],
+                                heads=config['heads'], dim_head=config['dim_head'],
+
+                                momentum=config['momentum'], weight_decay=config['weight_decay'],
+                                dropout_classifier=config['dropout_classifier'])
+
+
     config['nb_encoder_params'], config['nb_trainable_params'] = count_parameters(model)
     print('\n Nb encoder params: ', config['nb_encoder_params'], 'Nb params total: ', config['nb_trainable_params'])
 
@@ -95,7 +111,7 @@ def main():
         callbacks=callbacks,
         weights_save_path=os.path.join(config['output_dir'], args.job_identifier),
         logger=wandb_logger,
-        plugins=DDPPlugin(find_unused_parameters=False))
+        plugins=DDPPlugin(find_unused_parameters=True))
 
     if trainer.gpus is not None:
         config['num_workers'] = int(trainer.gpus/8 * 128)
