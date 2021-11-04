@@ -203,10 +203,10 @@ class ConvLSTMCell(nn.Module):
 
 if __name__ == '__main__':
 
-    model = StackedConvLSTMModel(input_channels=1, hidden_per_layer=[3, 3, 3],
-                                 return_sequence=False, kernel_size_per_layer=[3, 3, 3],
+    model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[8,16,32,64,128,256,512],
+                                 return_sequence=True, kernel_size_per_layer=[7,5,5,5,5,5,3],
                                  conv_stride=1, if_not_sequence='two_last')
-    output_list = model(torch.rand(64, 20, 1, 64, 64))
+    output_list = model(torch.rand(1, 32, 3, 224, 224))
 
     print('\n Output size:')
     print(output_list.size(), '\n')
