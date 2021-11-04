@@ -10,7 +10,6 @@ import utils
 import argparse
 from data_module import Diving48DataModule
 from lit_convlstm import ConvLSTMModule
-from old_lit_convlstm import OldConvLSTMModule
 from lit_3dconv import ThreeDCNNModule
 from models.model_utils import count_parameters
 
@@ -108,7 +107,6 @@ def main():
 
     if config['inference_from_checkpoint_only']:
         if config['model_name'] == 'lit_convlstm':
-            # model_from_checkpoint = OldConvLSTMModule.load_from_checkpoint(config['checkpoint_path'])
             model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['checkpoint_path'])
         if config['model_name'] == 'lit_3dconv':
             model_from_checkpoint = ThreeDCNNModule.load_from_checkpoint(config['checkpoint_path'])
