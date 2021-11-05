@@ -89,6 +89,8 @@ class Conv3dBlock(nn.Module):
         if pooling == 'avg':
             self.pool = nn.AvgPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2),
                 padding=pooling_padding)
+        if pooling == '':
+            self.pool = None
         self.dropout3d = nn.Dropout3d(p=dropout)
 
     def forward(self, x):
@@ -97,7 +99,8 @@ class Conv3dBlock(nn.Module):
         x = self.conv3d(x)
         # print(x.size())
         x = self.relu(x)
-        x = self.pool(x)
+        if not self.pool == None:
+            x = self.pool(x)
         # print(x.size())
         # print('end block \n')
         x = self.bn(x)
@@ -106,21 +109,36 @@ class Conv3dBlock(nn.Module):
 
 
 if __name__ == "__main__":
-    input_tensor = torch.autograd.Variable(torch.rand(64, 1, 20, 64, 64))
-    model = VGGStyle3DCNN(input_channels=1, hidden_per_layer=[ 5, 5, 5, 5],
-        kernel_size_per_layer=[3, 3, 3, 3],
+    input_tensor = torch.autograd.Variable(torch.rand(1, 3, 32, 224, 224))
+    # hpl = [128, 128, 128, 128, 32]
+    # kernels = [7, 7, 7, 3, 3]
+    # pooling = ["max", "", "max", "max", "max"]
+    hpl = [32, 64, 128, 128, 128, 256, 256, 256, 512, 512, 512]
+    kernels = [5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    pooling = ["", "", "max", "", "max", "", "max", "", "", "max", ""]
+    print('hpl', hpl)
+    print('kernels', kernels)
+    print('pooling', pooling)
+    model = VGGStyle3DCNN(input_channels=3, hidden_per_layer=hpl,
+        kernel_size_per_layer=kernels,
         conv_stride=1,
-        pooling=["max", "max", "max", "max"],
+        pooling=pooling,
         dropout=0
         )
     output = model(input_tensor)
 
     print('\n Output size:')
     print(output.size(), '\n')
+    from numpy import prod
+    linear_params = prod(output.size()[1:]) * 48
+    print('linear params: ', linear_params)
+    
 
     pytorch_total_params = sum(p.numel() for p in model.parameters())
-    print('pytorch_total_params', pytorch_total_params)
+    print('3dconv total_params', pytorch_total_params)
 
     pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print('pytorch_total_params, only trainable', pytorch_total_params)
+    print('3dconv total_params, only trainable', pytorch_total_params)
+
+    print('3dconv trainable + linear', pytorch_total_params + linear_params)
 
