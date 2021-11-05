@@ -73,9 +73,9 @@ def main():
                                 nb_labels=config['nb_labels'],
                                 lr=config['lr'], reduce_lr=config['reduce_lr'],
 
-                                dim=config['dim'], patch_size=config['patch_size'], num_frames=config['input_spatial_size'],
-                                attn_dropout=config['attn_dropout'], ff_dropout=config['ff_dropout'], depth=config['depth'],
-                                heads=config['heads'], dim_head=config['dim_head'],
+                                dim=config['dim'], patch_size=config['patch_size'],
+                                attn_dropout=config['attn_dropout'], ff_dropout=config['ff_dropout'],
+                                depth=config['depth'], heads=config['heads'], dim_head=config['dim_head'],
 
                                 momentum=config['momentum'], weight_decay=config['weight_decay'],
                                 dropout_classifier=config['dropout_classifier'])
@@ -119,6 +119,7 @@ def main():
         config['num_workers'] = 0
 
     shape_test_dm = Diving48DataModule(data_dir=config['shape_data_folder'], config=config, seq_first=model.seq_first)
+    shape2_test_dm = Diving48DataModule(data_dir=config['shape2_data_folder'], config=config, seq_first=model.seq_first)
     texture_test_dm = Diving48DataModule(data_dir=config['texture_data_folder'], config=config, seq_first=model.seq_first)
 
     if config['inference_from_checkpoint_only']:
@@ -126,15 +127,19 @@ def main():
             model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['checkpoint_path'])
         if config['model_name'] == 'lit_3dconv':
             model_from_checkpoint = ThreeDCNNModule.load_from_checkpoint(config['checkpoint_path'])
+        if config['model_name'] == 'lit_transformer':
+            model_from_checkpoint = TimeSformerModule.load_from_checkpoint(config['checkpoint_path'])
         trainer.test(datamodule=shape_test_dm, model=model_from_checkpoint)
+        trainer.test(datamodule=shape2_test_dm, model=model_from_checkpoint)
         trainer.test(datamodule=texture_test_dm, model=model_from_checkpoint)
 
     else:
         train_dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
         trainer.fit(model, train_dm)
         wandb_logger.log_metrics({'best_val_acc': trainer.checkpoint_callback.best_model_score})
-        trainer.test(datamodule=shape_test_dm)
-        trainer.test(datamodule=texture_test_dm)
+        trainer.test(datamodule=shape_test_dm, ckpt_path="best")
+        trainer.test(datamodule=shape2_test_dm, ckpt_path="best")
+        trainer.test(datamodule=texture_test_dm, ckpt_path="best")
 
 
 if __name__ == '__main__':

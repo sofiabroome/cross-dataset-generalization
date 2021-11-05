@@ -1,8 +1,8 @@
 {
-    "inference_from_checkpoint_only": 0,
-    "model_name": "lit_3dconv",
+    "inference_from_checkpoint_only": 1,
+    "model_name": "lit_transformer",
     "output_dir": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
-    "checkpoint_path": "-1",
+    "checkpoint_path": "xdataset_output/252283/cross-dataset-generalization/353a3tpu/checkpoints/epoch=52-val_loss=3.25-val_acc=0.3830.ckpt",
 
     "data_folder": "/proj/berzelius_pilot/users/x_sofbr/diving48/diving48_rgb_webm/",
     "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_04mask/",
@@ -19,24 +19,27 @@
     "nb_train_samples": 13525,
     "nb_val_samples": 1502,
 
-    "num_workers": 32,
+    "num_workers": 128,
 
     "num_classes": 48,
     "nb_labels": 48,
     "batch_size": 8,
-    "clip_size": 32,
+    "clip_size": 8,
 
-    "hidden_per_layer": [128, 128, 128, 128, 128, 128],
-    "kernel_size_per_layer": [7, 7, 7, 5, 3, 3],
-    "conv_stride": 1,
-    "pooling": ["max", "max", "max", "max", "max", "max"],
+    "dim": 1024,
+    "patch_size": 16,
+    "attn_dropout": 0.1,
+    "ff_dropout": 0.1,
+    "depth": 12,
+    "heads": 8,
+    "dim_head": 128,
 
     "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,
     "nclips_test": 1,
 
-    "step_size_train_val": 1,
-    "step_size_test": 1,
+    "step_size_train_val": -1,
+    "step_size_test": -1,
 
     "optimizer": "SGD",
     "lr": 0.001,
@@ -47,6 +50,7 @@
 
     "early_stopping_patience": 30,
     "weight_decay": 0.00001,
+
     "dropout_encoder": 0,
     "dropout_classifier": 0,
 

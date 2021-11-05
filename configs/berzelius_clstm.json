@@ -5,7 +5,8 @@
     "checkpoint_path": "xdataset_output/158786/cross-dataset-generalization/34ca29sk/checkpoints/epoch=41-val_loss=2.80-val_acc=0.3996.ckpt",
 
     "data_folder": "/proj/berzelius_pilot/users/x_sofbr/diving48/diving48_rgb_webm/",
-    "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_cropped_divers/",
+    "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_04mask/",
+    "shape2_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_0mask/",
     "texture_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_masked_divers_all_masks/",
     "training_extension": ".webm",
     "test_extension": "_cropped.mp4",

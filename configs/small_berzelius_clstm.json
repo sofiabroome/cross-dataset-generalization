@@ -27,7 +27,7 @@
 
     "hidden_per_layer": [2, 2, 2],
     "kernel_size_per_layer": [3, 3, 3],
-    "conv_stride": 1,
+    "conv_stride": 2,
     "return_sequence": 0,
     "if_not_sequence": "last",
 
@@ -43,7 +43,7 @@
     "reduce_lr": 0,
     "last_lr": 0.001,
     "momentum": 0.9,
-    "num_epochs": 500,
+    "num_epochs": 5,
 
     "early_stopping_patience": 30,
     "weight_decay": 0.00001,
