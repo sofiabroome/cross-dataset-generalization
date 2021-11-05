@@ -85,14 +85,14 @@ class VGGStyle3DCNN(nn.Module):
         # print(x.size())
 
         # averaging features in time dimension
-        x = x.mean(-1).mean(-1).mean(-1)
+        # x = x.mean(-1).mean(-1).mean(-1)
 
         return x
 
 
 if __name__ == "__main__":
     num_classes = 157
-    input_tensor = torch.autograd.Variable(torch.rand(1, 3, 16, 224, 224))
+    input_tensor = torch.autograd.Variable(torch.rand(1, 3, 32, 224, 224))
     model = VGGStyle3DCNN()
     output = model(input_tensor)
     print(output.size())

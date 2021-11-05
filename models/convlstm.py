@@ -203,9 +203,9 @@ class ConvLSTMCell(nn.Module):
 
 if __name__ == '__main__':
 
-    model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[8,16,32,64,128,256,512],
-                                 return_sequence=True, kernel_size_per_layer=[7,5,5,5,5,5,3],
-                                 conv_stride=1, if_not_sequence='two_last')
+    model = StackedConvLSTMModel(input_channels=3, hidden_per_layer=[128,128,128,128],
+                                 return_sequence=True, kernel_size_per_layer=[7,7,5,3],
+                                 conv_stride=2, if_not_sequence='two_last')
     output_list = model(torch.rand(1, 32, 3, 224, 224))
 
     print('\n Output size:')

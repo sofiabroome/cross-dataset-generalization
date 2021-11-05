@@ -68,6 +68,8 @@ class VGGStyle3DCNN(nn.Module):
             x = self.conv3d_blocks[layer_idx](x)
             # print(x.size())
 
+        # x = x.mean(-1).mean(-1).mean(-1)
+
         return x
 
 
@@ -110,12 +112,12 @@ class Conv3dBlock(nn.Module):
 
 if __name__ == "__main__":
     input_tensor = torch.autograd.Variable(torch.rand(1, 3, 32, 224, 224))
-    # hpl = [128, 128, 128, 128, 32]
-    # kernels = [7, 7, 7, 3, 3]
-    # pooling = ["max", "", "max", "max", "max"]
-    hpl = [32, 64, 128, 128, 128, 256, 256, 256, 512, 512, 512]
-    kernels = [5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
-    pooling = ["", "", "max", "", "max", "", "max", "", "", "max", ""]
+    hpl = [128, 128, 128, 128, 128, 128]
+    kernels = [7, 7, 7, 3, 3, 3]
+    pooling = ["max", "max", "max", "max", "max", "max"]
+    # hpl = [32, 64, 128, 128, 128, 256, 256, 256, 512, 512, 512]
+    # kernels = [5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    # pooling = ["", "", "max", "", "max", "", "max", "", "", "max", ""]
     print('hpl', hpl)
     print('kernels', kernels)
     print('pooling', pooling)
