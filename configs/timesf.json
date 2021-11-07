@@ -26,11 +26,11 @@
     "batch_size": 8,
     "clip_size": 8,
 
-    "dim": 512,
+    "dim": 256,
     "patch_size": 16,
     "attn_dropout": 0,
     "ff_dropout": 0,
-    "depth": 4,
+    "depth": 11,
     "heads": 8,
     "dim_head": 32,
 
