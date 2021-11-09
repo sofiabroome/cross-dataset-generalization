@@ -8,7 +8,7 @@ from pytorch_lightning import seed_everything
 
 import utils
 import argparse
-from data_module import Diving48DataModule
+from data_module import Diving48DataModule, UCFHMDBFullDataModule
 from lit_convlstm import ConvLSTMModule
 from lit_3dconv import ThreeDCNNModule
 from models.model_utils import count_parameters
