@@ -1,5 +1,7 @@
 import av
 import time
+
+import pandas as pd
 import torch
 import numpy as np
 
@@ -8,6 +10,7 @@ from data_augmentor import Augmentor
 import torchvision
 from transforms_video import *
 from utils import save_images_for_debug
+import os
 
 
 FRAMERATE = 1  # default value
@@ -107,6 +110,91 @@ class VideoFolder(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.json_data)
+
+
+class UCFHMDBFullDataset(torch.utils.data.Dataset):
+
+    def __init__(self, root, annotation_file, clip_size,
+                 nclips, step_size, is_val, frame_sample_mode,
+                 transform_pre=None, transform_post=None,
+                 augmentation_mappings_json=None, augmentation_types_todo=None,
+                 get_item_id=False, seq_first=False, extension='.avi'):
+        self.annotation_df = pd.read_csv(annotation_file, delim_whitespace=True)
+        self.root = root
+        self.frame_sample_mode = frame_sample_mode
+        self.transform_pre = transform_pre
+        self.transform_post = transform_post
+
+        self.augmentor = Augmentor(augmentation_mappings_json,
+                                   augmentation_types_todo)
+
+        self.clip_size = clip_size
+        self.nclips = nclips
+        self.step_size = step_size
+        self.is_val = is_val
+        self.get_item_id = get_item_id
+        self.seq_first = seq_first
+        self.extension = extension
+
+    def __getitem__(self, index):
+
+        item = self.annotation_df.iloc[index]
+        item_path = os.path.join(self.root, item['video_id'] + self.extension)
+
+        # Open video file
+        reader = av.open(item_path)  # Takes around 0.005 seconds.
+
+        try:
+            imgs = []
+            imgs = [f.to_rgb().to_ndarray() for f in reader.decode(video=0)]  # 0.5 s.
+        except (RuntimeError, ZeroDivisionError) as exception:
+            print('{}: The AV reader cannot open {}. Empty '
+                  'list returned.'.format(type(exception).__name__, item_path))
+
+        if self.frame_sample_mode == 'evenly_distributed':
+            evenly_spaced_frame_indices = np.round(
+                np.linspace(0, len(imgs) - 1, self.clip_size)
+            ).astype(int)
+            imgs = [imgs[ind] for ind in evenly_spaced_frame_indices]
+
+        imgs = self.transform_pre(imgs)
+        imgs, label = self.augmentor(imgs, item['class'])
+        imgs = self.transform_post(imgs)
+
+        num_frames = len(imgs)
+
+        if self.frame_sample_mode == 'augmented':
+            if self.nclips > -1:
+                num_frames_necessary = self.clip_size * self.nclips * self.step_size
+            else:
+                num_frames_necessary = num_frames
+            offset = 0
+            if num_frames_necessary < num_frames:
+                # If there are more frames, then sample starting offset.
+                diff = (num_frames - num_frames_necessary)
+                # temporal augmentation
+                if not self.is_val:
+                    offset = np.random.randint(0, diff)
+
+            if len(imgs) < (self.clip_size * self.nclips):
+                imgs.extend([imgs[-1]] *
+                            ((self.clip_size * self.nclips) - len(imgs)))
+
+            imgs = imgs[offset: num_frames_necessary + offset: self.step_size]
+
+        target_idx = label
+
+        # format data to torch
+        data = torch.stack(imgs)
+        if not self.seq_first:
+            data = data.permute(1, 0, 2, 3)
+        if self.get_item_id:
+            return data, target_idx, item['video_id']
+        else:
+            return data, target_idx
+
+    def __len__(self):
+        return len(self.annotation_df)
 
 
 if __name__ == '__main__':
