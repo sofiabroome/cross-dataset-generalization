@@ -1,8 +1,8 @@
 {
-    "inference_from_checkpoint_only": 0,
+    "inference_from_checkpoint_only": 1,
     "model_name": "lit_3dconv",
     "output_dir": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
-    "checkpoint_path": "-1",
+    "checkpoint_path": "xdataset_output/245676/cross-dataset-generalization/2p0kj5ow/checkpoints/epoch=89-val_loss=2.35-val_acc=0.5007.ckpt",
 
     "data_folder": "/proj/berzelius_pilot/users/x_sofbr/diving48/diving48_rgb_webm/",
     "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_04mask/",
@@ -26,10 +26,10 @@
     "batch_size": 8,
     "clip_size": 32,
 
-    "hidden_per_layer": [128, 128, 128, 128, 128, 128],
-    "kernel_size_per_layer": [7, 7, 7, 5, 3, 3],
+    "hidden_per_layer": [32, 64, 128, 128, 128, 256, 256, 256, 512, 512, 512],
+    "kernel_size_per_layer": [5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
     "conv_stride": 1,
-    "pooling": ["max", "max", "max", "max", "max", "max"],
+    "pooling": ["", "", "max", "", "max", "", "max", "", "", "max", ""],
 
     "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,

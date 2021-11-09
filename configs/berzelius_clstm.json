@@ -1,10 +1,15 @@
 {
     "inference_from_checkpoint_only": 0,
     "model_name": "lit_convlstm",
-    "output_dir": "/proj/berzelius_pilot/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
-    "checkpoint_path": "-1",
+    "output_dir": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
+    "checkpoint_path": "xdataset_output/158786/cross-dataset-generalization/34ca29sk/checkpoints/epoch=41-val_loss=2.80-val_acc=0.3996.ckpt",
 
     "data_folder": "/proj/berzelius_pilot/users/x_sofbr/diving48/diving48_rgb_webm/",
+    "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_04mask/",
+    "shape2_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_0mask/",
+    "texture_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_masked_divers_all_masks/",
+    "training_extension": ".webm",
+    "test_extension": "_cropped.mp4",
 
     "json_data_train": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_V2_train.json",
     "json_data_val": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_V2_test.json",
@@ -18,13 +23,13 @@
 
     "num_classes": 48,
     "nb_labels": 48,
-    "batch_size": 256,
+    "batch_size": 32,
     "clip_size": 32,
 
-    "hidden_per_layer": [8, 16, 32, 64, 128, 256, 512],
-    "kernel_size_per_layer": [7, 5, 5, 5, 5, 5, 3],
-    "conv_stride": 1,
-    "return_sequence": 0,
+    "hidden_per_layer": [8,64,128,512],
+    "kernel_size_per_layer": [7,7,5,5],
+    "conv_stride": 2,
+    "return_sequence": 1,
     "if_not_sequence": "last",
 
     "frame_sample_mode": "evenly_distributed",

@@ -1,12 +1,11 @@
 {
     "inference_from_checkpoint_only": 0,
-    "model_name": "lit_3dconv",
+    "model_name": "lit_convlstm",
     "output_dir": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
     "checkpoint_path": "-1",
 
     "data_folder": "/proj/berzelius_pilot/users/x_sofbr/diving48/diving48_rgb_webm/",
-    "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_04mask/",
-    "shape2_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_0mask/",
+    "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_cropped_divers/",
     "texture_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_masked_divers_all_masks/",
     "training_extension": ".webm",
     "test_extension": "_cropped.mp4",
@@ -26,17 +25,18 @@
     "batch_size": 8,
     "clip_size": 32,
 
-    "hidden_per_layer": [128, 128, 128, 128, 128, 128],
-    "kernel_size_per_layer": [7, 7, 7, 5, 3, 3],
-    "conv_stride": 1,
-    "pooling": ["max", "max", "max", "max", "max", "max"],
+    "hidden_per_layer": [128, 128, 128, 128],
+    "kernel_size_per_layer": [7, 7, 5, 3],
+    "conv_stride": 2,
+    "return_sequence": 1,
+    "if_not_sequence": "last",
 
     "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,
     "nclips_test": 1,
 
-    "step_size_train_val": 1,
-    "step_size_test": 1,
+    "step_size_train_val": -1,
+    "step_size_test": -1,
 
     "optimizer": "SGD",
     "lr": 0.001,
@@ -47,7 +47,6 @@
 
     "early_stopping_patience": 30,
     "weight_decay": 0.00001,
-    "dropout_encoder": 0,
     "dropout_classifier": 0,
 
     "input_spatial_size": 224,

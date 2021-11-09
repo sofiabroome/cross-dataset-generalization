@@ -11,6 +11,7 @@ import argparse
 from data_module import Diving48DataModule, UCFHMDBFullDataModule
 from lit_convlstm import ConvLSTMModule
 from lit_3dconv import ThreeDCNNModule
+from lit_timesformer import TimeSformerModule
 from models.model_utils import count_parameters
 
 
@@ -65,6 +66,21 @@ def main():
                                 momentum=config['momentum'], weight_decay=config['weight_decay'],
                                 dropout_classifier=config['dropout_classifier'])
 
+    if config['model_name'] == 'lit_transformer':
+        model = TimeSformerModule(input_size=(config['batch_size'], config['clip_size'], 3,
+                                config['input_spatial_size'], config['input_spatial_size']),
+                                optimizer=config['optimizer'],
+                                nb_labels=config['nb_labels'],
+                                lr=config['lr'], reduce_lr=config['reduce_lr'],
+
+                                dim=config['dim'], patch_size=config['patch_size'],
+                                attn_dropout=config['attn_dropout'], ff_dropout=config['ff_dropout'],
+                                depth=config['depth'], heads=config['heads'], dim_head=config['dim_head'],
+
+                                momentum=config['momentum'], weight_decay=config['weight_decay'],
+                                dropout_classifier=config['dropout_classifier'])
+
+
     config['nb_encoder_params'], config['nb_trainable_params'] = count_parameters(model)
     print('\n Nb encoder params: ', config['nb_encoder_params'], 'Nb params total: ', config['nb_trainable_params'])
 
@@ -95,7 +111,7 @@ def main():
         callbacks=callbacks,
         weights_save_path=os.path.join(config['output_dir'], args.job_identifier),
         logger=wandb_logger,
-        plugins=DDPPlugin(find_unused_parameters=False))
+        plugins=DDPPlugin(find_unused_parameters=True))
 
     if trainer.gpus is not None:
         config['num_workers'] = int(trainer.gpus/8 * 128)
@@ -103,18 +119,27 @@ def main():
         config['num_workers'] = 0
 
     shape_test_dm = Diving48DataModule(data_dir=config['shape_data_folder'], config=config, seq_first=model.seq_first)
+    shape2_test_dm = Diving48DataModule(data_dir=config['shape2_data_folder'], config=config, seq_first=model.seq_first)
     texture_test_dm = Diving48DataModule(data_dir=config['texture_data_folder'], config=config, seq_first=model.seq_first)
 
     if config['inference_from_checkpoint_only']:
-        model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['ckpt_path'])
-        # trainer.test(datamodule=test_dm, model=model_from_checkpoint)
+        if config['model_name'] == 'lit_convlstm':
+            model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['checkpoint_path'])
+        if config['model_name'] == 'lit_3dconv':
+            model_from_checkpoint = ThreeDCNNModule.load_from_checkpoint(config['checkpoint_path'])
+        if config['model_name'] == 'lit_transformer':
+            model_from_checkpoint = TimeSformerModule.load_from_checkpoint(config['checkpoint_path'])
+        trainer.test(datamodule=shape_test_dm, model=model_from_checkpoint)
+        trainer.test(datamodule=shape2_test_dm, model=model_from_checkpoint)
+        trainer.test(datamodule=texture_test_dm, model=model_from_checkpoint)
 
     else:
         train_dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
         trainer.fit(model, train_dm)
         wandb_logger.log_metrics({'best_val_acc': trainer.checkpoint_callback.best_model_score})
-        trainer.test(datamodule=shape_test_dm)
-        trainer.test(datamodule=texture_test_dm)
+        trainer.test(datamodule=shape_test_dm, ckpt_path="best")
+        trainer.test(datamodule=shape2_test_dm, ckpt_path="best")
+        trainer.test(datamodule=texture_test_dm, ckpt_path="best")
 
 
 if __name__ == '__main__':
