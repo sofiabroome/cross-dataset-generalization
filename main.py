@@ -8,7 +8,7 @@ from pytorch_lightning import seed_everything
 
 import utils
 import argparse
-from data_module import Diving48DataModule
+from data_module import Diving48DataModule, UCFHMDBFullDataModule
 from lit_convlstm import ConvLSTMModule
 from lit_3dconv import ThreeDCNNModule
 from lit_timesformer import TimeSformerModule
@@ -118,10 +118,6 @@ def main():
     else:
         config['num_workers'] = 0
 
-    shape_test_dm = Diving48DataModule(data_dir=config['shape_data_folder'], config=config, seq_first=model.seq_first)
-    shape2_test_dm = Diving48DataModule(data_dir=config['shape2_data_folder'], config=config, seq_first=model.seq_first)
-    texture_test_dm = Diving48DataModule(data_dir=config['texture_data_folder'], config=config, seq_first=model.seq_first)
-
     if config['inference_from_checkpoint_only']:
         if config['model_name'] == 'lit_convlstm':
             model_from_checkpoint = ConvLSTMModule.load_from_checkpoint(config['checkpoint_path'])
@@ -129,18 +125,36 @@ def main():
             model_from_checkpoint = ThreeDCNNModule.load_from_checkpoint(config['checkpoint_path'])
         if config['model_name'] == 'lit_transformer':
             model_from_checkpoint = TimeSformerModule.load_from_checkpoint(config['checkpoint_path'])
-        trainer.test(datamodule=shape_test_dm, model=model_from_checkpoint)
-        trainer.test(datamodule=shape2_test_dm, model=model_from_checkpoint)
-        trainer.test(datamodule=texture_test_dm, model=model_from_checkpoint)
 
-    else:
-        train_dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
-        trainer.fit(model, train_dm)
-        wandb_logger.log_metrics({'best_val_acc': trainer.checkpoint_callback.best_model_score})
-        trainer.test(datamodule=shape_test_dm, ckpt_path="best")
-        trainer.test(datamodule=shape2_test_dm, ckpt_path="best")
-        trainer.test(datamodule=texture_test_dm, ckpt_path="best")
+    if 'diving' in config['data_folder']:
 
+        shape_test_dm = Diving48DataModule(data_dir=config['shape_data_folder'], config=config, seq_first=model.seq_first)
+        shape2_test_dm = Diving48DataModule(data_dir=config['shape2_data_folder'], config=config, seq_first=model.seq_first)
+        texture_test_dm = Diving48DataModule(data_dir=config['texture_data_folder'], config=config, seq_first=model.seq_first)
+
+        if config['inference_from_checkpoint_only']:
+            trainer.test(datamodule=shape_test_dm, model=model_from_checkpoint)
+            trainer.test(datamodule=shape2_test_dm, model=model_from_checkpoint)
+            trainer.test(datamodule=texture_test_dm, model=model_from_checkpoint)
+
+        else:
+            train_dm = Diving48DataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
+            trainer.fit(model, train_dm)
+            wandb_logger.log_metrics({'best_val_acc': trainer.checkpoint_callback.best_model_score})
+            trainer.test(datamodule=shape_test_dm, ckpt_path="best")
+            trainer.test(datamodule=shape2_test_dm, ckpt_path="best")
+            trainer.test(datamodule=texture_test_dm, ckpt_path="best")
+
+    if 'ucf' in config['data_folder'] or 'hmdb' in config['data_folder']:
+        test_dm = UCFHMDBFullDataModule(data_dir=config['test_data_folder'], config=config, seq_first=model.seq_first)
+        if config['inference_from_checkpoint_only']:
+            trainer.test(datamodule=test_dm, model=model_from_checkpoint)
+
+        else:
+            train_dm = UCFHMDBFullDataModule(data_dir=config['data_folder'], config=config, seq_first=model.seq_first)
+            trainer.fit(model, train_dm)
+            wandb_logger.log_metrics({'best_val_acc': trainer.checkpoint_callback.best_model_score})
+            trainer.test(datamodule=test_dm, ckpt_path="best")
 
 if __name__ == '__main__':
     main()
