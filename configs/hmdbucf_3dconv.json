@@ -1,0 +1,49 @@
+{
+    "inference_from_checkpoint_only": 0,
+    "model_name": "lit_3dconv",
+    "output_dir": "trained_models/",
+    "checkpoint_path": "-1",
+
+    "data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/hmdb51_onedir/",
+    "test_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_101_onedir/",
+    "train_annotations": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_hmdb_full_crossdomain_annotations/list_hmdb51_train_hmdb_ucf-feature.txt",
+    "val_annotations": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_hmdb_full_crossdomain_annotations/list_hmdb51_val_hmdb_ucf-feature.txt",
+    "test_annotations": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_hmdb_full_crossdomain_annotations/list_ucf101_val_hmdb_ucf-feature.txt",
+    "training_extension": ".avi",
+    "test_extension": ".avi",
+
+    "num_workers": 0,
+
+    "num_classes": 12,
+    "batch_size": 5,
+    "clip_size": 6,
+    "nb_labels": 48,
+
+    "hidden_per_layer": [1, 1],
+    "kernel_size_per_layer": [3, 3],
+    "conv_stride": 1,
+    "pooling": ["max", "max"],
+
+    "frame_sample_mode": "evenly_distributed",
+    "nclips_train_val": 1,
+    "nclips_test": 1,
+
+    "step_size_train_val": 1,
+    "step_size_test": 1,
+
+    "optimizer": "Adam",
+    "lr": 0.01,
+    "reduce_lr": 0,
+    "last_lr": 0.00001,
+    "momentum": 0.9,
+    "num_epochs": 1,
+
+    "early_stopping_patience": 20,
+    "weight_decay": 0.00001,
+    "dropout_encoder": 0,
+    "dropout_classifier": 0,
+
+    "input_spatial_size": 112,
+    "upscale_size_train": 112,
+    "upscale_size_eval": 112
+}
