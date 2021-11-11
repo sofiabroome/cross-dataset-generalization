@@ -4,11 +4,11 @@
     "output_dir": "trained_models/",
     "checkpoint_path": "-1",
 
-    "data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/hmdb51_onedir_weirdcharsremoved/",
-    "test_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_101_onedir/",
-    "train_annotations": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_hmdb_full_crossdomain_annotations/list_hmdb51_train_hmdb_ucf-feature.txt",
-    "val_annotations": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_hmdb_full_crossdomain_annotations/list_hmdb51_val_hmdb_ucf-feature.txt",
-    "test_annotations": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_hmdb_full_crossdomain_annotations/list_ucf101_val_hmdb_ucf-feature.txt",
+    "data_folder": "/Users/ernest_pokropek/Desktop/cross-dataset-generalization/data/hmdb51_onedir_weirdcharsremoved/",
+    "test_data_folder": "/Users/ernest_pokropek/Desktop/cross-dataset-generalization/data/ucf_101_onedir/",
+    "train_annotations": "/Users/ernest_pokropek/Desktop/cross-dataset-generalization/data/ucf_hmdb_full_crossdomain_annotations/list_hmdb51_train_hmdb_ucf-feature.txt",
+    "val_annotations": "/Users/ernest_pokropek/Desktop/cross-dataset-generalization/data/ucf_hmdb_full_crossdomain_annotations/list_hmdb51_val_hmdb_ucf-feature.txt",
+    "test_annotations": "/Users/ernest_pokropek/Desktop/cross-dataset-generalization/data/ucf_hmdb_full_crossdomain_annotations/list_ucf101_val_hmdb_ucf-feature.txt",
     "training_extension": ".avi",
     "test_extension": ".avi",
 
@@ -36,7 +36,7 @@
     "reduce_lr": 0,
     "last_lr": 0.00001,
     "momentum": 0.9,
-    "num_epochs": 1,
+    "num_epochs": 10,
 
     "early_stopping_patience": 20,
     "weight_decay": 0.00001,

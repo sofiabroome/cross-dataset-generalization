@@ -14,7 +14,9 @@ import itertools
 import os
 # from pytorchvideo.pytorchvideo.data.encoded_video_pyav import EncodedVideo
 from pytorchvideo.data.encoded_video_pyav import EncodedVideo
-
+import wandb
+from torchvision.utils import make_grid
+from PIL import Image
 
 FRAMERATE = 1  # default value
 
@@ -150,7 +152,7 @@ class UCFHMDBFullDataset(torch.utils.data.Dataset):
         # # print(item_path)
         # stream = 'video'
         # video_object = torchvision.io.VideoReader(item_path, stream)
-        # # to_pil = torchvision.transforms.ToPILImage()
+        # to_pil = torchvision.transforms.ToPILImage(mode='RGB')
         # imgs = []
         end = float(item['nb_frames']/30)
         # for frame in itertools.takewhile(lambda x: x['pts'] <= end, video_object.seek(0)):
@@ -206,6 +208,8 @@ class UCFHMDBFullDataset(torch.utils.data.Dataset):
             mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225])
         imgs = [resize(imgs[ind]) for ind in range(self.clip_size)]
+        wandb.log({"images_input": [wandb.Image(im) for im in imgs]})
+
 
         num_frames = len(imgs)
 
