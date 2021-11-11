@@ -114,6 +114,7 @@ class UCFHMDBFullDataModule(pl.LightningDataModule):
         self.seq_first = seq_first
 
         self.transform_train_pre = ComposeMix([
+            # [torchvision.transforms.ToPILImage(), "img"],
             [RandomHorizontalFlipVideo(p=0.5), "vid"]
         ])
 

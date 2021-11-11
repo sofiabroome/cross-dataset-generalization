@@ -10,7 +10,9 @@ from data_augmentor import Augmentor
 import torchvision
 from transforms_video import *
 from utils import save_images_for_debug
+import itertools
 import os
+from pytorchvideo.data.encoded_video import EncodedVideo
 
 
 FRAMERATE = 1  # default value
@@ -68,10 +70,13 @@ class VideoFolder(torch.utils.data.Dataset):
                 np.linspace(0, len(imgs) - 1, self.clip_size)
             ).astype(int)
             imgs = [imgs[ind] for ind in evenly_spaced_frame_indices]
-
+        # print('befor pre', type(imgs[0]))
         imgs = self.transform_pre(imgs)
+        # print('after pre', type(imgs[0]))
         imgs, label = self.augmentor(imgs, item.label)
+        # print('after aug', type(imgs[0]))
         imgs = self.transform_post(imgs)
+        # print('after post', type(imgs[0]))
 
         num_frames = len(imgs)
 
@@ -141,25 +146,63 @@ class UCFHMDBFullDataset(torch.utils.data.Dataset):
         item = self.annotation_df.iloc[index]
         item_path = os.path.join(self.root, item['video_id'] + self.extension)
 
-        # Open video file
-        reader = av.open(item_path)  # Takes around 0.005 seconds.
+        # # print(item_path)
+        # stream = 'video'
+        # video_object = torchvision.io.VideoReader(item_path, stream)
+        # # to_pil = torchvision.transforms.ToPILImage()
+        # imgs = []
+        end = int(item['nb_frames']/30)
+        # for frame in itertools.takewhile(lambda x: x['pts'] <= end, video_object.seek(0)):
+        #     imgs.append(frame['data'])
+        #     # imgs.append(frame['data'].numpy())
 
-        try:
-            imgs = []
-            imgs = [f.to_rgb().to_ndarray() for f in reader.decode(video=0)]  # 0.5 s.
-        except (RuntimeError, ZeroDivisionError) as exception:
-            print('{}: The AV reader cannot open {}. Empty '
-                  'list returned.'.format(type(exception).__name__, item_path))
+        # Open video file
+        # reader = av.open(item_path)  # Takes around 0.005 seconds.
+        video = EncodedVideo.from_path(item_path)
+        imgs = video.get_clip(start_sec=0, end_sec=end)
+        print('Keys:', imgs.keys())
+        imgs = imgs['video']
+
+        if imgs == None:
+            print(item_path)
+            print(index)
+        # print(imgs.shape)
+        # print(imgs[0].shape)
+        # print(imgs[4].shape)
+
+        # try:
+        #     imgs = []
+        #     imgs = [f.to_rgb().to_ndarray() for f in reader.decode(video=0)]  # 0.5 s.
+        # except (RuntimeError, ZeroDivisionError) as exception:
+        #     print('{}: The AV reader cannot open {}. Empty '
+        #           'list returned.'.format(type(exception).__name__, item_path))
 
         if self.frame_sample_mode == 'evenly_distributed':
             evenly_spaced_frame_indices = np.round(
-                np.linspace(0, len(imgs) - 1, self.clip_size)
-            ).astype(int)
-            imgs = [imgs[ind] for ind in evenly_spaced_frame_indices]
+                np.linspace(0, len(imgs) - 1, self.clip_size)).astype(int)
+            imgs = [imgs[:,ind,:,:] for ind in evenly_spaced_frame_indices]
+            # imgs = [np.moveaxis(imgs[ind], 0, -1) for ind in evenly_spaced_frame_indices]
 
+        # print('after: ', len(imgs))
+        # print(imgs[0].shape)
         imgs = self.transform_pre(imgs)
-        imgs, label = self.augmentor(imgs, item['class'])
-        imgs = self.transform_post(imgs)
+        # imgs = [flip(imgs[ind]) for ind in range(self.clip_size)]
+        # print('got past pre')
+        # print(item['class'])
+        # imgs, label = self.augmentor(imgs, item['class'])
+        # print('label after', label)
+        label = item['class']
+        # print('got past aug')
+        imgs = [torch.div(imgs[ind], 255.) for ind in range(self.clip_size)]
+        # print(imgs[0])
+        # imgs = self.transform_post(imgs)
+        # print('got past post')
+
+        resize = torchvision.transforms.Resize((112, 112))
+        normalize = torchvision.transforms.Normalize(
+            mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225])
+        imgs = [resize(imgs[ind]) for ind in range(self.clip_size)]
 
         num_frames = len(imgs)
 

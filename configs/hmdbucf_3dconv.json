@@ -4,7 +4,7 @@
     "output_dir": "trained_models/",
     "checkpoint_path": "-1",
 
-    "data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/hmdb51_onedir/",
+    "data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/hmdb51_onedir_weirdcharsremoved/",
     "test_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_101_onedir/",
     "train_annotations": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_hmdb_full_crossdomain_annotations/list_hmdb51_train_hmdb_ucf-feature.txt",
     "val_annotations": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_hmdb_full_crossdomain_annotations/list_hmdb51_val_hmdb_ucf-feature.txt",

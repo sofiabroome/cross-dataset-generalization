@@ -4,6 +4,7 @@ import numpy as np
 import numbers
 import collections
 import random
+import torchvision
 
 
 class ComposeMix(object):
@@ -103,7 +104,8 @@ class RandomHorizontalFlipVideo(object):
         """
         if random.random() < self.p:
             for idx, img in enumerate(imgs):
-                imgs[idx] = cv2.flip(img, 1)
+                # imgs[idx] = cv2.flip(img, 1)
+                imgs[idx] = torchvision.transforms.RandomHorizontalFlip(p=1)(img)
         return imgs
 
     def __repr__(self):
