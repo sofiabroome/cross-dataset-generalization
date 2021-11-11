@@ -12,7 +12,8 @@ from transforms_video import *
 from utils import save_images_for_debug
 import itertools
 import os
-from pytorchvideo.data.encoded_video import EncodedVideo
+# from pytorchvideo.pytorchvideo.data.encoded_video_pyav import EncodedVideo
+from pytorchvideo.data.encoded_video_pyav import EncodedVideo
 
 
 FRAMERATE = 1  # default value
@@ -151,7 +152,7 @@ class UCFHMDBFullDataset(torch.utils.data.Dataset):
         # video_object = torchvision.io.VideoReader(item_path, stream)
         # # to_pil = torchvision.transforms.ToPILImage()
         # imgs = []
-        end = int(item['nb_frames']/30)
+        end = float(item['nb_frames']/30)
         # for frame in itertools.takewhile(lambda x: x['pts'] <= end, video_object.seek(0)):
         #     imgs.append(frame['data'])
         #     # imgs.append(frame['data'].numpy())
@@ -160,10 +161,12 @@ class UCFHMDBFullDataset(torch.utils.data.Dataset):
         # reader = av.open(item_path)  # Takes around 0.005 seconds.
         video = EncodedVideo.from_path(item_path)
         imgs = video.get_clip(start_sec=0, end_sec=end)
-        print('Keys:', imgs.keys())
+        # print('Keys:', imgs.keys())
         imgs = imgs['video']
 
         if imgs == None:
+            print(item['nb_frames'])
+            print(end)
             print(item_path)
             print(index)
         # print(imgs.shape)
