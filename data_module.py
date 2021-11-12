@@ -124,7 +124,7 @@ class UCFHMDBFullDataModule(pl.LightningDataModule):
 
         # Transforms common to train and eval sets and applied after "pre" transforms
         self.transform_post = ComposeMix([
-            [torchvision.transforms.ToTensor(), "img"],
+            # [torchvision.transforms.ToTensor(), "img"],
             [torchvision.transforms.Resize((self.dims[1], self.dims[2])), "img"],
             [torchvision.transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],  # default values for imagenet
