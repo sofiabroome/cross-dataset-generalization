@@ -28,7 +28,7 @@
     "batch_size": 16,
     "clip_size": 16,
 
-    "hidden_per_layer": [128, 128, 128, 128],
+    "hidden_per_layer": [32, 32, 32, 32],
     "kernel_size_per_layer": [7, 7, 5, 3],
     "conv_stride": [2, 2, 1, 1],
     "return_sequence": 1,

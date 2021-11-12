@@ -32,8 +32,8 @@
     "step_size_train_val": 1,
     "step_size_test": 1,
 
-    "optimizer": "Adam",
-    "lr": 0.01,
+    "optimizer": "SGD",
+    "lr": 0.001,
     "reduce_lr": 0,
     "last_lr": 0.00001,
     "momentum": 0.9,
