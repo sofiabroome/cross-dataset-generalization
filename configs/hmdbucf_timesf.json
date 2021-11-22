@@ -1,8 +1,8 @@
 {
     "inference_from_checkpoint_only": 0,
-    "model_name": "lit_convlstm",
+    "model_name": "lit_transformer",
     "output_dir": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
-    "checkpoint_path": "xdataset_output/158786/cross-dataset-generalization/34ca29sk/checkpoints/epoch=41-val_loss=2.80-val_acc=0.3996.ckpt",
+    "checkpoint_path": "-1",
 
     "data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/hmdb51_onedir_weirdcharsremoved/",
     "test_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/datasets/ucf_101_onedir/",
@@ -13,18 +13,20 @@
     "training_extension": ".avi",
     "test_extension": ".avi",
 
-    "num_workers": 32,
+    "num_workers": 128,
 
-    "num_classes": 48,
-    "nb_labels": 48,
+    "num_classes": 12,
+    "nb_labels": 12,
     "batch_size": 16,
     "clip_size": 16,
 
-    "hidden_per_layer": [16, 32, 64, 128],
-    "kernel_size_per_layer": [5, 5, 5, 3],
-    "conv_stride": [2, 2, 1, 1],
-    "return_sequence": 1,
-    "if_not_sequence": "last",
+    "dim": 512,
+    "patch_size": 16,
+    "attn_dropout": 0,
+    "ff_dropout": 0,
+    "depth": 12,
+    "heads": 8,
+    "dim_head": 64,
 
     "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,
@@ -40,8 +42,10 @@
     "momentum": 0.9,
     "num_epochs": 500,
 
-    "early_stopping_patience": 30,
+    "early_stopping_patience": 75,
     "weight_decay": 0.00001,
+
+    "dropout_encoder": 0,
     "dropout_classifier": 0,
 
     "input_spatial_size": 112,

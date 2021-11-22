@@ -12,7 +12,6 @@ class Diving48DataModule(pl.LightningDataModule):
         super().__init__()
         self.data_dir = data_dir
         self.dims = (3, config['input_spatial_size'], config['input_spatial_size'])
-        self.dims = (3, 224, 224)
         self.num_classes = 48
         self.upscale_size_train = config['upscale_size_train']
         self.upscale_size_eval = config['upscale_size_eval']
@@ -106,7 +105,6 @@ class UCFHMDBFullDataModule(pl.LightningDataModule):
         super().__init__()
         self.data_dir = data_dir
         self.dims = (3, config['input_spatial_size'], config['input_spatial_size'])
-        self.dims = (3, 112, 112)
         self.num_classes = 12
         self.upscale_size_train = config['upscale_size_train']
         self.upscale_size_eval = config['upscale_size_eval']
@@ -124,7 +122,7 @@ class UCFHMDBFullDataModule(pl.LightningDataModule):
 
         # Transforms common to train and eval sets and applied after "pre" transforms
         self.transform_post = ComposeMix([
-            [torchvision.transforms.ToTensor(), "img"],
+            # [torchvision.transforms.ToTensor(), "img"],
             [torchvision.transforms.Resize((self.dims[1], self.dims[2])), "img"],
             [torchvision.transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],  # default values for imagenet

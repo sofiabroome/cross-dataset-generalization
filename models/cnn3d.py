@@ -111,13 +111,16 @@ class Conv3dBlock(nn.Module):
 
 
 if __name__ == "__main__":
-    input_tensor = torch.autograd.Variable(torch.rand(1, 3, 32, 224, 224))
-    hpl = [128, 128, 128, 128, 128, 128]
-    kernels = [7, 7, 7, 3, 3, 3]
-    pooling = ["max", "max", "max", "max", "max", "max"]
-    # hpl = [32, 64, 128, 128, 128, 256, 256, 256, 512, 512, 512]
-    # kernels = [5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
-    # pooling = ["", "", "max", "", "max", "", "max", "", "", "max", ""]
+    nb_classes = 12
+    # nb_classes = 48
+    # input_tensor = torch.autograd.Variable(torch.rand(1, 3, 32, 224, 224))
+    input_tensor = torch.autograd.Variable(torch.rand(1, 3, 32, 112, 112))
+    # hpl = [128, 128, 128, 128, 128, 128]
+    # kernels = [7, 7, 7, 3, 3, 3]
+    # pooling = ["max", "max", "max", "max", "max", "max"]
+    hpl = [32, 64, 128, 128, 128, 256, 256, 256, 512, 512, 512]
+    kernels = [5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+    pooling = ["", "", "max", "", "max", "", "max", "", "", "max", ""]
     print('hpl', hpl)
     print('kernels', kernels)
     print('pooling', pooling)
@@ -132,7 +135,7 @@ if __name__ == "__main__":
     print('\n Output size:')
     print(output.size(), '\n')
     from numpy import prod
-    linear_params = prod(output.size()[1:]) * 48
+    linear_params = prod(output.size()[1:]) * nb_classes
     print('linear params: ', linear_params)
     
 

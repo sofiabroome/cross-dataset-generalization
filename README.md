@@ -1,104 +1,71 @@
-# something-something-v2-baseline
+# Cross-dataset Generalization
 
-**_Note_: An updated version of this repo is here: https://github.com/TwentyBN/smth-smth-v2-baseline-with-models
-It contains pre-trained models (on smth-smth) to facilitate extracting features on your own datasets!**
-
-Contains code to get you started with a baseline on version 2 of "something-something" dataset
-
-- Paper: https://arxiv.org/abs/1706.04261
-- Data and Leaderboard: https://20bn.com/datasets/something-something/v2
-
-
-Performance of pre-trained model on **validation set**:
-
-|Model|top-1|top-5|
-|-------|:------:|:------:|
-|model3D_1|49.88%|78.82%|
-|model3D_1_224|47.67%|77.35%|
-|model3D_1 with left-right augmentation and fps jitter|51.33%|80.46%|
-
-## Prerequisites
-- Python 3.x
-- PyTorch: 0.4.0 (conda installation preferred - ref https://pytorch.org/)
-- torchvision
-- matplotlib
-- skvideo (scikit-video)
-- ffmpeg
-- opencv-python
-- sh
-- PyAV (`conda install av -c conda-forge`)
 
 ## Setting up
 
+Set up a conda environment in the following way.
+
+`conda create -n myenv python=3.8 scipy=1.5.2`
+
+`conda install pytorch torchvision cudatoolkit=11.3 -c pytorch`
+
+`conda install -c conda-forge matplotlib`
+
+`conda install -c conda-forge opencv`
+
+`pip install torchsummary`
+
+`conda install -c conda-forge scikit-learn`
+
+`conda install av -c conda-forge`
+
+`conda install -c conda-forge ipdb`
+
+`conda install -c conda-forge prettytable`
+
+`conda install pytorch-lightning -c conda-forge`
+
+`conda install -c anaconda pandas`
+
+`conda install -c conda-forge tqdm`
+
+You also will want a wandb-account to keep track of your experiments.
+
+`pip install wandb`
+
 #### Download the dataset
-The dataset is provided in the form of videos in `webm` format using VP9 
-encoding, occupying a total size of 19.4 GB. The videos are in landscape format
-with height (the shorter side) of 240px at 12 frames/sec.
+The Diving48 dataset is available for download [here](http://www.svcl.ucsd.edu/projects/resound/dataset.html).
+The shape and texture versions will be made available soon, please contact the repository owner if you want them earlier.
 
-- Follow instructions on the data page
-- Download the json files to fetch annotations of the data
-
-#### Modify config file to include the above paths
-In configuration file (located at `configs/config_model1.json`), modify the
+#### Modify config file to include the correct data paths
+In the configuration files (located under `configs/`), modify the
 - path to data: `data_folder`
 - path to JSONs: `json_data_train`, `json_data_val`, `json_data_test`
 
 #### How to train from scratch?
-Run: `CUDA_VISIBLE_DEVICES=0,1 python train.py -c configs/config_model1.json -g 0,1 --use_cuda`
+Run:
+
+`python main.py --config configs/berzelius_clstm.json --job_identifier 389459 --fast_dev_run=False --log_every_n_steps=5 --gpus=1`
+
+There are also sbatch-scripts for Slurm cluster training under `run_scripts`.
 
 where,
-- `CUDA_VISIBLE_DEVICES`: environment variable to specify GPU ids to use. 
-(_Note: uses all gpus if not specified_)
+- `config`: is the path to the .json config-file,
+- `job_identifier`: should be a unique string for your job to not overwrite checkpoints or other output from the run,
+- `fast_dev_run`, `log_every_n_steps`, `gpus`: all communicate with the PyTorch Lightning Trainer, see documentation [here](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html).
 
 ### Hyperparameters
-Please refer to config file at: `configs/config_model1.json`
-- `batch_size: 30` - change this to fill your GPU memory (_Note: should be a 
-multiple of number of gpus used_)
-- `num_workers: 5`: number of parallel processes to fetch and pre-process data
- (increase to max possible CPU cores you have to get better GPU utilisation)
-- `lr: 0.008` - increase it if you happen to increase the batch size
-- `clip_size: 72` - number of frames in a video sample as input to the model 
-(which at default 12 fps covers 6 secs)
-- `step_size_train: 1` - factor by which FPS is reduced 
- (so a step size of 2 would mean an fps of 6)
-- `input_spatial_size: 84` - dimension of each frame in input is scaled
- and cropped to 84x84, but you can use the ubiquitous frame size of 224x224, 
- since the data is provided with height of 240px in landscape format
-- `column_units: 512`: desired number of units in feature space for each sample
+Please refer to the config files under `configs/`.
+
 
 ## How to use a pre-trained model?
-- We provide a vanilla implementation of VGG-styled 3D-CNN with 11 layers of 
-3D convolutions. Please refer here: 
-[model3D_1.py](https://github.com/TwentyBN/smth-smth-baseline/blob/master/models/model3D_1.py)
+- Insert the path to a `.ckpt` file in the configs, and set `inference_only` to True in the config file.
+Run, for example:
 
-- Use the [notebook](https://github.com/TwentyBN/smth-smth-baseline/blob/master/notebooks/get_prediction_from_pre_trained_model.ipynb)
- to get predictions from this model
-
-## Test model and get submission file on test data
-Modify path to model file in `checkpoint` variable of config file
-
-`CUDA_VISIBLE_DEVICES=0,1 python train.py -c configs/config_model1.json -g 0,1 -r -e --use_cuda`
-
-The options used here are:
-- `-r`: to resume an already trained model
-- `-e`: to evaluate the model on test data
-
-## Grad-CAM
-Use the [notebook](https://github.com/TwentyBN/smth-smth-baseline/blob/master/notebooks/get_saliency_maps_CAM.ipynb)
- to visualize saliency maps of any example from validation set
-
-## Commonsense score
-Use the [notebook](https://github.com/TwentyBN/smth-smth-baseline/blob/master/notebooks/analyse_predictions-confusion_contrastive_groups.ipynb)
- to fetch commonsense score using contrastive groups list in directory `assets/` 
-
-For more details, please refer: https://openreview.net/pdf?id=rkX9Z_kwf
+`python main.py --config configs/inference_convlstm.json --job_identifier 389459 --fast_dev_run=False --log_every_n_steps=5 --gpus=1`
 
 
 ## LICENSE
+The repository was initially forked from a [repository](https://github.com/TwentyBN/smth-smth-baseline/) created by TwentyBN. It has been heavily modified by this repository owner since then, adapting the repository to use PyTorch Lightning. 
 Most code is copyright (c) 2018 Twenty Billion Neurons GmbH under an MIT Licence. See the file `LICENSE` for details.
 Some code snippets have been taken from Keras (see `LICENSE_keras`) and the PyTorch (see `LICENSE_pytorch`). See comments in the source code for details.
-
-## References
-[1] Goyal et al. ‘The “something something” video database for learning and evaluating visual common sense.’ arXiv preprint arXiv:1706.04261 (2017). In ICCV 2017.
-
-[2] https://github.com/jacobgil/pytorch-grad-cam

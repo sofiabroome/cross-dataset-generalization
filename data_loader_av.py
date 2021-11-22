@@ -149,7 +149,7 @@ class UCFHMDBFullDataset(torch.utils.data.Dataset):
         item = self.annotation_df.iloc[index]
         item_path = os.path.join(self.root, item['video_id'] + self.extension)
 
-        end = float(item['nb_frames']/30)
+        end = float(item['nb_frames']/30)  # Assuming 30 fps
         video = EncodedVideo.from_path(item_path)
         imgs = video.get_clip(start_sec=0, end_sec=end)['video']
 
@@ -162,13 +162,7 @@ class UCFHMDBFullDataset(torch.utils.data.Dataset):
         label = item['class']
 
         imgs = [torch.div(imgs[ind], 255.) for ind in range(self.clip_size)]
-        # imgs = self.transform_post(imgs)
-
-        resize = torchvision.transforms.Resize((112, 112))
-        normalize = torchvision.transforms.Normalize(
-            mean=[0.485, 0.456, 0.406],
-            std=[0.229, 0.224, 0.225])
-        imgs = [resize(imgs[ind]) for ind in range(self.clip_size)]
+        imgs = self.transform_post(imgs)
 
         # wandb.init()
         # wandb.log({"images_input": [wandb.Image(im) for im in imgs]})
