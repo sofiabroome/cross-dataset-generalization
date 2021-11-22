@@ -44,7 +44,9 @@ In the configuration files (located under `configs/`), modify the
 
 #### How to train from scratch?
 Run:
+
 `python main.py --config configs/berzelius_clstm.json --job_identifier 389459 --fast_dev_run=False --log_every_n_steps=5 --gpus=1`
+
 There are also sbatch-scripts for Slurm cluster training under `run_scripts`.
 
 where,
@@ -59,6 +61,7 @@ Please refer to the config files under `configs/`.
 ## How to use a pre-trained model?
 - Insert the path to a `.ckpt` file in the configs, and set `inference_only` to True.
 Run, for example:
+
 `python main.py --config configs/inference_convlstm.json --job_identifier 389459 --fast_dev_run=False --log_every_n_steps=5 --gpus=1`
 
 
