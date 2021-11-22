@@ -30,11 +30,12 @@ Set up a conda environment in the following way.
 `conda install -c conda-forge tqdm`
 
 You also will want a wandb-account to keep track of your experiments.
+
 `pip install wandb`
 
 #### Download the dataset
 The Diving48 dataset is available for download [here](http://www.svcl.ucsd.edu/projects/resound/dataset.html).
-The shape and texture versions will be made available soon, please contact me if you want them earlier.
+The shape and texture versions will be made available soon, please contact the repository owner if you want them earlier.
 
 #### Modify config file to include the correct data paths
 In the configuration files (located under `configs/`), modify the
@@ -62,6 +63,6 @@ Run, for example:
 
 
 ## LICENSE
-The repository was initially forked from a [repository](https://github.com/TwentyBN/smth-smth-baseline/) created by TwentyBN. It has been heavily modified by me since then, adapting the repository to use PyTorch Lightning. 
+The repository was initially forked from a [repository](https://github.com/TwentyBN/smth-smth-baseline/) created by TwentyBN. It has been heavily modified by this repository owner since then, adapting the repository to use PyTorch Lightning. 
 Most code is copyright (c) 2018 Twenty Billion Neurons GmbH under an MIT Licence. See the file `LICENSE` for details.
 Some code snippets have been taken from Keras (see `LICENSE_keras`) and the PyTorch (see `LICENSE_pytorch`). See comments in the source code for details.
