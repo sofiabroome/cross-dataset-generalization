@@ -149,7 +149,7 @@ class UCFHMDBFullDataset(torch.utils.data.Dataset):
         item = self.annotation_df.iloc[index]
         item_path = os.path.join(self.root, item['video_id'] + self.extension)
 
-        end = float(item['nb_frames']/30)
+        end = float(item['nb_frames']/30)  # Assuming 30 fps
         video = EncodedVideo.from_path(item_path)
         imgs = video.get_clip(start_sec=0, end_sec=end)['video']
 
