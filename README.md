@@ -1,4 +1,4 @@
-# Cross-dataset Generalization
+# cross-dataset-generalization
 
 
 ## Setting up
