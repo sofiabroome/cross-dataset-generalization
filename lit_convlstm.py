@@ -97,7 +97,9 @@ class ConvLSTMModule(pl.LightningModule):
             optimizer = torch.optim.SGD(
                 self.parameters(), self.lr, momentum=self.momentum,
                 weight_decay=self.weight_decay)
-
+        if self.optimizer == 'Adam':
+            optimizer = torch.optim.Adam(
+                self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
         if self.optimizer == 'Adadelta':
             optimizer = torch.optim.Adadelta(
                 self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
