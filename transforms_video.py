@@ -92,8 +92,9 @@ class RandomHorizontalFlipVideo(object):
         p (float): probability of the image being flipped. Default value is 0.5
     """
 
-    def __init__(self, p=0.5):
+    def __init__(self, p=0.5, from_tensor=True):
         self.p = p
+        self.from_tensor = from_tensor
 
     def __call__(self, imgs):
         """
@@ -104,8 +105,10 @@ class RandomHorizontalFlipVideo(object):
         """
         if random.random() < self.p:
             for idx, img in enumerate(imgs):
-                # imgs[idx] = cv2.flip(img, 1)
-                imgs[idx] = torchvision.transforms.RandomHorizontalFlip(p=1)(img)
+                if self.from_tensor:
+                    imgs[idx] = torchvision.transforms.RandomHorizontalFlip(p=1)(img)
+                else:
+                    imgs[idx] = cv2.flip(img, 1)
         return imgs
 
     def __repr__(self):

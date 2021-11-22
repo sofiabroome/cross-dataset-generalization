@@ -45,7 +45,6 @@ class ThreeDCNNModule(ConvLSTMModule):
         self.save_hyperparameters()
 
     def forward(self, x) -> torch.Tensor:
-        # import ipdb; ipdb.set_trace()
         x = self.conv3d_encoder(x)
         x = self.flatten(x)
         x = self.dropout(x)

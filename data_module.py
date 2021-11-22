@@ -20,7 +20,7 @@ class Diving48DataModule(pl.LightningDataModule):
         self.seq_first = seq_first
 
         self.transform_train_pre = ComposeMix([
-            [RandomHorizontalFlipVideo(p=0.5), "vid"]
+            [RandomHorizontalFlipVideo(p=0.5, from_tensor=False), "vid"]
             # [RandomRotationVideo(15), "vid"],
             # [Scale(self.upscale_size_train), "img"],
             # [RandomCropVideo(self.dims[1]), "vid"],
@@ -115,7 +115,7 @@ class UCFHMDBFullDataModule(pl.LightningDataModule):
 
         self.transform_train_pre = ComposeMix([
             # [torchvision.transforms.ToPILImage(), "img"],
-            [RandomHorizontalFlipVideo(p=0.5), "vid"]
+            [RandomHorizontalFlipVideo(p=0.5, from_tensor=True), "vid"]
         ])
 
         # Center crop videos during evaluation
