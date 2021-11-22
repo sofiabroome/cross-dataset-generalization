@@ -52,7 +52,7 @@ There are also sbatch-scripts for Slurm cluster training under `run_scripts`.
 where,
 - `config`: is the path to the .json config-file,
 - `job_identifier`: should be a unique string for your job to not overwrite checkpoints or other output from the run,
-- `fast_dev_run`, `log_every_n_steps`, `gpus`: all communicate with the PyTorch Lightning trainer, see documentation [here](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html).
+- `fast_dev_run`, `log_every_n_steps`, `gpus`: all communicate with the PyTorch Lightning Trainer, see documentation [here](https://pytorch-lightning.readthedocs.io/en/latest/common/trainer.html).
 
 ### Hyperparameters
 Please refer to the config files under `configs/`.
