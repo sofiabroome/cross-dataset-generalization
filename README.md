@@ -59,7 +59,7 @@ Please refer to the config files under `configs/`.
 
 
 ## How to use a pre-trained model?
-- Insert the path to a `.ckpt` file in the configs, and set `inference_only` to True.
+- Insert the path to a `.ckpt` file in the configs, and set `inference_only` to True in the config file.
 Run, for example:
 
 `python main.py --config configs/inference_convlstm.json --job_identifier 389459 --fast_dev_run=False --log_every_n_steps=5 --gpus=1`
