@@ -1,6 +1,6 @@
 # cross-dataset-generalization
 
-[![S1 example](https://img.youtube.com/vi/MipgpaWbfSU/maxresdefault.jpg)](https://youtu.be/MipgpaWbfSU)
+[![S1 example](https://img.youtube.com/vi/MipgpaWbfSU/0.jpg)](https://youtu.be/MipgpaWbfSU)
 
 ## Setting up
 
