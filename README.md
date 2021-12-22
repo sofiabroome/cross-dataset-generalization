@@ -1,6 +1,20 @@
 # cross-dataset-generalization
 
+This repository contains code for the article "Recur, Attend or Convolve? Frame Dependency Modeling Matters for Cross-Domain Robustness in Action Recognition" by Broomé et al., arXiv 2021 -- for the experiments on the modified Diving48 domains.
+
+
+### Examples from Fig. 2 in the article
+S1
+
 [![S1 example](https://img.youtube.com/vi/MipgpaWbfSU/0.jpg)](https://youtu.be/MipgpaWbfSU)
+
+S2
+[![S2 example](https://img.youtube.com/vi/PkXZZQezQAo/0.jpg)](https://youtu.be/PkXZZQezQAo)
+
+T
+[![T example](https://img.youtube.com/vi/_Lq1VeKnGMg/0.jpg)](https://youtu.be/_Lq1VeKnGMg)
+
+
 
 ## Setting up
 
