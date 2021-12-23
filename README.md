@@ -3,6 +3,9 @@
 This repository contains code for the article "Recur, Attend or Convolve? Frame Dependency Modeling Matters for Cross-Domain Robustness in Action Recognition" by Broomé et al., arXiv 2021 -- for the experiments on the modified Diving48 domains.
 
 
+A link to the modified Diving48 domains on Harvard Dataverse will published here shortly.
+
+
 ### Examples from Fig. 2 in the article
 
 S1
