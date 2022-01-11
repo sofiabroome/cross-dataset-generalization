@@ -3,7 +3,7 @@
 This repository contains code for the article "Recur, Attend or Convolve? Frame Dependency Modeling Matters for Cross-Domain Robustness in Action Recognition" by Broomé et al., arXiv 2021 -- for the experiments on the modified Diving48 domains.
 
 
-A link to the modified Diving48 domains on Harvard Dataverse will published here shortly.
+The dataset consisting of modified Diving48 domains is published at Harvard Dataverse and can be found and downloaded [here](https://doi.org/10.7910/DVN/MXJPIZ).
 
 
 ### Examples from Fig. 2 in the article
@@ -56,7 +56,7 @@ You also will want a wandb-account to keep track of your experiments.
 
 #### Download the dataset
 The Diving48 dataset is available for download [here](http://www.svcl.ucsd.edu/projects/resound/dataset.html).
-The shape and texture versions will be made available soon, please contact the repository owner if you want them earlier.
+Our modified shape and texture domains can be found and downloaded [here](https://doi.org/10.7910/DVN/MXJPIZ).
 
 #### Modify config file to include the correct data paths
 In the configuration files (located under `configs/`), modify the
