@@ -8,18 +8,9 @@ The dataset consisting of modified Diving48 domains is published at Harvard Data
 
 ### Examples from Fig. 2 in the article
 
-S1
-
-[![S1 example](https://img.youtube.com/vi/MipgpaWbfSU/0.jpg)](https://youtu.be/MipgpaWbfSU)
-
-S2
-
-[![S2 example](https://img.youtube.com/vi/PkXZZQezQAo/0.jpg)](https://youtu.be/PkXZZQezQAo)
-
-T
-
-[![T example](https://img.youtube.com/vi/_Lq1VeKnGMg/0.jpg)](https://youtu.be/_Lq1VeKnGMg)
-
+|       S1                |    S2  |    T   | 
+| --------------------- |:---------:|:---------:|
+| ![](assets/8qRmKunCjtY_00016_S1.gif)  | ![](assets/8qRmKunCjtY_00016_S2.gif) | ![](assets/8qRmKunCjtY_00016_T.gif)| 
 
 
 ## Setting up
