@@ -28,7 +28,7 @@ class StackedConvLSTMModel(nn.Module):
             cur_input_dim = self.input_channels if i == 0 else self.hidden_per_layer[i - 1]
             self.blocks.append(ConvLSTMBlock(cur_input_dim, hidden_dim=hidden_per_layer[i],
                                              kernel_size=kernel_size_per_layer[i],
-                                             stride=self.conv_stride[i], bias=True))
+                                             stride=self.conv_stride, bias=True))
         self.conv_lstm_blocks = nn.ModuleList(self.blocks)
 
     def forward(self, input_tensor, initial_hidden_states=None):

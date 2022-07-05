@@ -111,7 +111,7 @@ def main():
         callbacks=callbacks,
         weights_save_path=os.path.join(config['output_dir'], args.job_identifier),
         logger=wandb_logger,
-        plugins=DDPPlugin(find_unused_parameters=True))
+        plugins=DDPPlugin(find_unused_parameters=False))
 
     if trainer.gpus is not None:
         config['num_workers'] = int(trainer.gpus/8 * 128)
