@@ -1,45 +1,42 @@
 {
     "inference_from_checkpoint_only": 1,
-    "model_name": "lit_transformer",
+    "model_name": "lit_3dconv",
     "output_dir": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/xdataset_output/",
-    "checkpoint_path": "xdataset_output/252283/cross-dataset-generalization/353a3tpu/checkpoints/epoch=52-val_loss=3.25-val_acc=0.3830.ckpt",
+    "checkpoint_path": "xdataset_output/240352/cross-dataset-generalization/7v04gniq/checkpoints/epoch=52-val_loss=3.36-val_acc=0.3830.ckpt",
 
     "data_folder": "/proj/berzelius_pilot/users/x_sofbr/diving48/diving48_rgb_webm/",
-    "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_04mask/",
-    "shape2_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_shape_blurbg_0mask/",
-    "texture_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/diver-segmentation/results/diving48_testset_masked_divers_all_masks/",
+    "shape_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/data/diving48_testset_shape_blurbg_04mask_videos/",
+    "shape2_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/data/diving48_testset_shape_blurbg_0mask_videos/",
+    "texture_data_folder": "/proj/berzelius-2021-50/users/x_sofbr/cross-dataset-generalization/data/diving48_testset_masked_divers_all_masks_videos/",
     "training_extension": ".webm",
     "test_extension": "_cropped.mp4",
 
     "json_data_train": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_V2_train.json",
     "json_data_val": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_V2_test.json",
-    "json_data_test": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_V2_test.json",
+    "json_data_test": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_V2_test_qual45.json",
 
     "json_file_labels": "/proj/berzelius_pilot/users/x_sofbr/diving48/Diving48_vocab.json",
     "nb_train_samples": 13525,
     "nb_val_samples": 1502,
 
-    "num_workers": 128,
+    "num_workers": 32,
 
     "num_classes": 48,
     "nb_labels": 48,
     "batch_size": 8,
-    "clip_size": 8,
+    "clip_size": 32,
 
-    "dim": 1024,
-    "patch_size": 16,
-    "attn_dropout": 0.1,
-    "ff_dropout": 0.1,
-    "depth": 12,
-    "heads": 8,
-    "dim_head": 128,
+    "hidden_per_layer": [32, 64, 128, 128, 128, 256, 256, 256, 512, 512, 512],
+    "kernel_size_per_layer": [5, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3],
+    "conv_stride": 1,
+    "pooling": ["", "", "max", "", "max", "", "max", "", "", "max", ""],
 
     "frame_sample_mode": "evenly_distributed",
     "nclips_train_val": 1,
     "nclips_test": 1,
 
-    "step_size_train_val": -1,
-    "step_size_test": -1,
+    "step_size_train_val": 1,
+    "step_size_test": 1,
 
     "optimizer": "SGD",
     "lr": 0.001,
@@ -50,7 +47,6 @@
 
     "early_stopping_patience": 30,
     "weight_decay": 0.00001,
-
     "dropout_encoder": 0,
     "dropout_classifier": 0,
 
