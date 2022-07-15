@@ -1,9 +1,20 @@
 # cross-dataset-generalization
 
-This repository contains code for the article "Recur, Attend or Convolve? Frame Dependency Modeling Matters for Cross-Domain Robustness in Action Recognition" by Broomé et al., arXiv 2021 -- for the experiments on the modified Diving48 domains.
+This repository contains code for the article [Recur, Attend or Convolve? Frame Dependency Modeling Matters for Cross-Domain Robustness in Action Recognition](https://arxiv.org/abs/2112.12175) by Broomé et al., arXiv 2021 -- for the experiments on the modified Diving48 domains.
 
 
 The dataset consisting of modified Diving48 domains is published at Harvard Dataverse and can be found and downloaded [here](https://doi.org/10.7910/DVN/MXJPIZ).
+
+Please cite our paper if you found this code or dataset useful for your work.
+
+```
+@article{broome2021recur,
+      title={{Recur, Attend or Convolve? Frame Dependency Modeling Matters for Cross-Domain Robustness in Action Recognition}}, 
+      author={Sofia Broomé and Ernest Pokropek and Boyu Li and Hedvig Kjellström},
+      journal={arXiv preprint arXiv:2112.12175},
+      year={2021}
+}
+```
 
 
 ### Examples from Fig. 2 in the article
